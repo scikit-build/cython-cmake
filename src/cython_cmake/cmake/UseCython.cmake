@@ -179,11 +179,11 @@ function(add_cython_target _name)
     set(extension "cxx")
   endif()
 
-  set(py_version_arg "")
+  set(language_level_arg "")
   if(_input_syntax STREQUAL "PY2")
-    set(py_version_arg "-2")
+    set(language_level_arg "-2")
   elseif(_input_syntax STREQUAL "PY3")
-    set(py_version_arg "-3")
+    set(language_level_arg "-3")
   endif()
 
   set(generated_file "${CMAKE_CURRENT_BINARY_DIR}/${_name}.${extension}")
@@ -350,7 +350,7 @@ function(add_cython_target _name)
   # Add the command to run the compiler.
   add_custom_command(OUTPUT ${generated_file}
                      COMMAND ${CYTHON_EXECUTABLE}
-                     ARGS ${cxx_arg} ${include_directory_arg} ${py_version_arg}
+                     ARGS ${cxx_arg} ${include_directory_arg} ${language_level_arg}
                           ${embed_arg} ${annotate_arg} ${cython_debug_arg}
                           ${line_directives_arg} ${CYTHON_FLAGS_LIST} ${pyx_location}
                           --output-file ${generated_file}
