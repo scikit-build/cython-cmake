@@ -136,9 +136,9 @@ function(add_cython_target _name)
   set(_embed_main FALSE)
 
   if("C" IN_LIST languages)
-    set(_output_syntax "C")
+    set(target_language "C")
   elseif("CXX" IN_LIST languages)
-    set(_output_syntax "CXX")
+    set(target_language "CXX")
   else()
     message(FATAL_ERROR "Either C or CXX must be enabled to use Cython")
   endif()
@@ -148,11 +148,11 @@ function(add_cython_target _name)
   endif()
 
   if(_args_C)
-    set(_output_syntax "C")
+    set(target_language "C")
   endif()
 
   if(_args_CXX)
-    set(_output_syntax "CXX")
+    set(target_language "CXX")
   endif()
 
   # Doesn't select an input syntax - Cython
@@ -174,7 +174,7 @@ function(add_cython_target _name)
 
   set(cxx_arg "")
   set(extension "c")
-  if(_output_syntax STREQUAL "CXX")
+  if(target_language STREQUAL "CXX")
     set(cxx_arg "--cplus")
     set(extension "cxx")
   endif()
@@ -198,7 +198,7 @@ function(add_cython_target _name)
   file(RELATIVE_PATH generated_file_relative
       ${CMAKE_BINARY_DIR} ${generated_file})
 
-  set(comment "Generating ${_output_syntax} source ${generated_file_relative}")
+  set(comment "Generating ${target_language} source ${generated_file_relative}")
   set(cython_include_directories "")
   set(pxd_dependencies "")
   set(c_header_dependencies "")
@@ -356,7 +356,7 @@ function(add_cython_target _name)
                           --output-file ${generated_file}
                      DEPENDS ${_source_file}
                              ${pxd_dependencies}
-                     IMPLICIT_DEPENDS ${_output_syntax}
+                     IMPLICIT_DEPENDS ${target_language}
                                       ${c_header_dependencies}
                      COMMENT ${comment})
 
