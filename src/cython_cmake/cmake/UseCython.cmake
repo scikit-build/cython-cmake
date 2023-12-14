@@ -108,9 +108,16 @@ set(CYTHON_C_EXTENSION "c")
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 
 function(add_cython_target _name)
-  set(options EMBED_MAIN C CXX PY2 PY3)
-  set(options1 OUTPUT_VAR)
-  cmake_parse_arguments(_args "${options}" "${options1}" "" ${ARGN})
+  set(_options EMBED_MAIN C CXX PY2 PY3)
+  set(_one_value OUTPUT_VAR)
+  set(_multi_value )
+
+  cmake_parse_arguments(_args
+    "${_options}"
+    "${_one_value}"
+    "${_multi_value}"
+    ${ARGN}
+    )
 
   list(GET _args_UNPARSED_ARGUMENTS 0 _arg0)
 
