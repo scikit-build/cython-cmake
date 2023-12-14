@@ -358,17 +358,28 @@ function(add_cython_target _name)
   string(REGEX REPLACE " " ";" CYTHON_FLAGS_LIST "${CYTHON_FLAGS}")
 
   # Add the command to run the compiler.
-  add_custom_command(OUTPUT ${generated_file}
-                     COMMAND ${CYTHON_EXECUTABLE}
-                     ARGS ${cxx_arg} ${include_directory_arg} ${language_level_arg}
-                          ${embed_arg} ${annotate_arg} ${cython_debug_arg}
-                          ${line_directives_arg} ${CYTHON_FLAGS_LIST} ${pyx_location}
-                          --output-file ${generated_file}
-                     DEPENDS ${_source_file}
-                             ${pxd_dependencies}
-                     IMPLICIT_DEPENDS ${target_language}
-                                      ${c_header_dependencies}
-                     COMMENT ${comment})
+  add_custom_command(
+    OUTPUT ${generated_file}
+    COMMAND ${CYTHON_EXECUTABLE}
+    ARGS
+      ${cxx_arg}
+      ${include_directory_arg}
+      ${language_level_arg}
+      ${embed_arg}
+      ${annotate_arg}
+      ${cython_debug_arg}
+      ${line_directives_arg}
+      ${CYTHON_FLAGS_LIST}
+      ${pyx_location}
+      --output-file ${generated_file}
+    DEPENDS
+      ${_source_file}
+      ${pxd_dependencies}
+    IMPLICIT_DEPENDS
+      ${target_language}
+      ${c_header_dependencies}
+    COMMENT ${comment}
+  )
 
   # NOTE(opadron): I thought about making a proper target, but after trying it
   # out, I decided that it would be far too convenient to use the same name as
