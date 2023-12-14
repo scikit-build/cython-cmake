@@ -8,7 +8,6 @@
 # using cython.
 #
 #   add_cython_target(<Name> [<CythonInput>]
-#                     [EMBED_MAIN]
 #                     [C | CXX]
 #                     [PY2 | PY3]
 #                     [OUTPUT_VAR <OutputVar>])
@@ -30,10 +29,6 @@
 # include search path.
 #
 # Options:
-#
-# ``EMBED_MAIN``
-#   Embed a main() function in the generated output (for stand-alone
-#   applications that initialize their own Python runtime).
 #
 # ``C | CXX``
 #   Force the generation of either a C or C++ file.  By default, a C file is
@@ -108,7 +103,7 @@ set(CYTHON_C_EXTENSION "c")
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 
 function(add_cython_target _name)
-  set(_options EMBED_MAIN C CXX PY2 PY3)
+  set(_options C CXX PY2 PY3)
   set(_one_value OUTPUT_VAR)
   set(_multi_value )
 
@@ -140,7 +135,6 @@ function(add_cython_target _name)
     endif()
   endif()
 
-  set(_embed_main FALSE)
 
   if("C" IN_LIST languages)
     set(target_language "C")
@@ -148,10 +142,6 @@ function(add_cython_target _name)
     set(target_language "CXX")
   else()
     message(FATAL_ERROR "Either C or CXX must be enabled to use Cython")
-  endif()
-
-  if(_args_EMBED_MAIN)
-    set(_embed_main TRUE)
   endif()
 
   if(_args_C)
@@ -172,11 +162,6 @@ function(add_cython_target _name)
 
   if(_args_PY3)
     set(_input_syntax "PY3")
-  endif()
-
-  set(embed_arg "")
-  if(_embed_main)
-    set(embed_arg "--embed")
   endif()
 
   set(cxx_arg "")
@@ -372,7 +357,6 @@ function(add_cython_target _name)
       ${cxx_arg}
       ${include_directory_arg}
       ${language_level_arg}
-      ${embed_arg}
       ${annotate_arg}
       ${cython_debug_arg}
       ${line_directives_arg}
