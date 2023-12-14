@@ -232,6 +232,9 @@ function(add_cython_target _name)
       list(REMOVE_ITEM pxds_to_check "${pxd}")
 
       # look for C headers
+      #
+      #   cdef extern from "spam.h"
+      #
       file(STRINGS "${pxd}" extern_from_statements
            REGEX "cdef[ ]+extern[ ]+from.*$")
       foreach(statement ${extern_from_statements})
@@ -251,6 +254,10 @@ function(add_cython_target _name)
 
       # check for pxd dependencies
       # Look for cimport statements.
+      #
+      #   cimport dishes
+      #   from dishes cimport spamdish
+      #
       set(module_dependencies "")
       file(STRINGS "${pxd}" cimport_statements REGEX cimport)
       foreach(statement ${cimport_statements})
@@ -268,6 +275,9 @@ function(add_cython_target _name)
 
       # check for pxi dependencies
       # Look for include statements.
+      #
+      #  include "spamstuff.pxi"
+      #
       set(include_dependencies "")
       file(STRINGS "${pxd}" include_statements REGEX include)
       foreach(statement ${include_statements})
