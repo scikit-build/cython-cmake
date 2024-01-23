@@ -218,7 +218,6 @@ function(add_cython_target _name)
 
   set(comment "Generating ${_target_language} source ${generated_file_relative}")
   set(cython_include_directories "")
-  set(pxd_dependencies "")
   set(c_header_dependencies "")
 
   # Get the include directories.
@@ -226,6 +225,94 @@ function(add_cython_target _name)
                          DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                          INCLUDE_DIRECTORIES)
   list(APPEND cython_include_directories ${cmake_include_directories})
+
+  get_source_file_property(pyx_location ${_source_file} LOCATION)
+
+  _extract_cython_pxd_dependencies(
+    SOURCE_FILE ${_source_file}
+    OUTPUT_VARIABLE pxd_dependencies
+    )
+
+  # Set additional flags.
+  set(annotate_arg "")
+  if(CYTHON_ANNOTATE)
+    set(annotate_arg "--annotate")
+  endif()
+
+  set(cython_debug_arg "")
+  set(line_directives_arg "")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR
+     CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(cython_debug_arg "--gdb")
+    set(line_directives_arg "--line-directives")
+  endif()
+
+  # Include directory arguments.
+  list(REMOVE_DUPLICATES cython_include_directories)
+  set(include_directory_arg "")
+  foreach(_include_dir ${cython_include_directories})
+    set(include_directory_arg
+        ${include_directory_arg} "--include-dir" "${_include_dir}")
+  endforeach()
+
+  list(REMOVE_DUPLICATES c_header_dependencies)
+
+  string(REGEX REPLACE " " ";" CYTHON_FLAGS_LIST "${CYTHON_FLAGS}")
+
+  # Add the command to run the compiler.
+  add_custom_command(
+    OUTPUT ${generated_file}
+    COMMAND ${CYTHON_EXECUTABLE}
+    ARGS
+      ${_target_language_arg}
+      ${include_directory_arg}
+      ${_language_level_arg}
+      ${annotate_arg}
+      ${cython_debug_arg}
+      ${line_directives_arg}
+      ${CYTHON_FLAGS_LIST}
+      ${pyx_location}
+      --output-file ${generated_file}
+    DEPENDS
+      ${_source_file}
+      ${pxd_dependencies}
+    IMPLICIT_DEPENDS
+      ${_target_language}
+      ${c_header_dependencies}
+    COMMENT ${comment}
+  )
+
+  # NOTE(opadron): I thought about making a proper target, but after trying it
+  # out, I decided that it would be far too convenient to use the same name as
+  # the target for the extension module (e.g.: for single-file modules):
+  #
+  # ...
+  # add_cython_target(_module.pyx)
+  # add_library(_module ${_module})
+  # ...
+  #
+  # The above example would not be possible since the "_module" target name
+  # would already be taken by the cython target.  Since I can't think of a
+  # reason why someone would need the custom target instead of just using the
+  # generated file directly, I decided to leave this commented out.
+  #
+  # add_custom_target(${_name} DEPENDS ${generated_file})
+endfunction()
+
+function(_extract_cython_pxd_dependencies)
+  set(_options )
+  set(_one_value SOURCE_FILE OUTPUT_VARIABLE)
+  set(_multi_value )
+
+  cmake_parse_arguments(_args
+    "${_options}"
+    "${_one_value}"
+    "${_multi_value}"
+    ${ARGN}
+    )
+
+  set(_source_file ${_args_SOURCE_FILE})
+  set(pxd_dependencies "")
 
   # Determine dependencies.
   # Add the pxd file with the same basename as the given pyx file.
@@ -237,6 +324,7 @@ function(add_cython_target _name)
             PATHS "${pyx_path}" ${cmake_include_directories}
             NO_DEFAULT_PATH)
   if(corresponding_pxd_file)
+    message(STATUS "Found ${corresponding_pxd_file}")
     list(APPEND pxd_dependencies "${corresponding_pxd_file}")
   endif()
 
@@ -348,71 +436,9 @@ function(add_cython_target _name)
     list(LENGTH pxds_to_check number_pxds_to_check)
   endwhile()
 
-  # Set additional flags.
-  set(annotate_arg "")
-  if(CYTHON_ANNOTATE)
-    set(annotate_arg "--annotate")
-  endif()
-
-  set(cython_debug_arg "")
-  set(line_directives_arg "")
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR
-     CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set(cython_debug_arg "--gdb")
-    set(line_directives_arg "--line-directives")
-  endif()
-
-  # Include directory arguments.
-  list(REMOVE_DUPLICATES cython_include_directories)
-  set(include_directory_arg "")
-  foreach(_include_dir ${cython_include_directories})
-    set(include_directory_arg
-        ${include_directory_arg} "--include-dir" "${_include_dir}")
-  endforeach()
-
   list(REMOVE_DUPLICATES pxd_dependencies)
-  list(REMOVE_DUPLICATES c_header_dependencies)
 
-  string(REGEX REPLACE " " ";" CYTHON_FLAGS_LIST "${CYTHON_FLAGS}")
-
-  # Add the command to run the compiler.
-  add_custom_command(
-    OUTPUT ${generated_file}
-    COMMAND ${CYTHON_EXECUTABLE}
-    ARGS
-      ${_target_language_arg}
-      ${include_directory_arg}
-      ${_language_level_arg}
-      ${annotate_arg}
-      ${cython_debug_arg}
-      ${line_directives_arg}
-      ${CYTHON_FLAGS_LIST}
-      ${pyx_location}
-      --output-file ${generated_file}
-    DEPENDS
-      ${_source_file}
-      ${pxd_dependencies}
-    IMPLICIT_DEPENDS
-      ${_target_language}
-      ${c_header_dependencies}
-    COMMENT ${comment}
-  )
-
-  # NOTE(opadron): I thought about making a proper target, but after trying it
-  # out, I decided that it would be far too convenient to use the same name as
-  # the target for the extension module (e.g.: for single-file modules):
-  #
-  # ...
-  # add_cython_target(_module.pyx)
-  # add_library(_module ${_module})
-  # ...
-  #
-  # The above example would not be possible since the "_module" target name
-  # would already be taken by the cython target.  Since I can't think of a
-  # reason why someone would need the custom target instead of just using the
-  # generated file directly, I decided to leave this commented out.
-  #
-  # add_custom_target(${_name} DEPENDS ${generated_file})
+  set(${OUTPUT_VARIABLE} ${pxd_dependencies} PARENT_SCOPE)
 
   # Remove their visibility to the user.
   set(corresponding_pxd_file "" CACHE INTERNAL "")
