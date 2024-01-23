@@ -217,21 +217,13 @@ function(add_cython_target _name)
       ${CMAKE_BINARY_DIR} ${generated_file})
 
   set(comment "Generating ${_target_language} source ${generated_file_relative}")
-  set(cython_include_directories "")
-  set(c_header_dependencies "")
-
-  # Get the include directories.
-  get_directory_property(cmake_include_directories
-                         DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-                         INCLUDE_DIRECTORIES)
-  list(APPEND cython_include_directories ${cmake_include_directories})
 
   get_source_file_property(pyx_location ${_source_file} LOCATION)
 
-  _extract_cython_pxd_dependencies(
-    SOURCE_FILE ${_source_file}
-    OUTPUT_VARIABLE pxd_dependencies
-    )
+  # Generated depfile is expected to have the ".dep" extension and be located along
+  # side the generated source file.
+  set(_depfile ${generated_file}.dep)
+  set(_depfile_arg "-M")
 
   # Set additional flags.
   set(annotate_arg "")
@@ -247,16 +239,6 @@ function(add_cython_target _name)
     set(line_directives_arg "--line-directives")
   endif()
 
-  # Include directory arguments.
-  list(REMOVE_DUPLICATES cython_include_directories)
-  set(include_directory_arg "")
-  foreach(_include_dir ${cython_include_directories})
-    set(include_directory_arg
-        ${include_directory_arg} "--include-dir" "${_include_dir}")
-  endforeach()
-
-  list(REMOVE_DUPLICATES c_header_dependencies)
-
   string(REGEX REPLACE " " ";" CYTHON_FLAGS_LIST "${CYTHON_FLAGS}")
 
   # Add the command to run the compiler.
@@ -265,20 +247,18 @@ function(add_cython_target _name)
     COMMAND ${CYTHON_EXECUTABLE}
     ARGS
       ${_target_language_arg}
-      ${include_directory_arg}
       ${_language_level_arg}
       ${annotate_arg}
       ${cython_debug_arg}
       ${line_directives_arg}
       ${CYTHON_FLAGS_LIST}
+      ${_depfile_arg}
       ${pyx_location}
       --output-file ${generated_file}
     DEPENDS
       ${_source_file}
-      ${pxd_dependencies}
-    IMPLICIT_DEPENDS
-      ${_target_language}
-      ${c_header_dependencies}
+    DEPFILE
+      ${_cython_depfile}
     COMMENT ${comment}
   )
 
@@ -299,149 +279,3 @@ function(add_cython_target _name)
   # add_custom_target(${_name} DEPENDS ${generated_file})
 endfunction()
 
-function(_extract_cython_pxd_dependencies)
-  set(_options )
-  set(_one_value SOURCE_FILE OUTPUT_VARIABLE)
-  set(_multi_value )
-
-  cmake_parse_arguments(_args
-    "${_options}"
-    "${_one_value}"
-    "${_multi_value}"
-    ${ARGN}
-    )
-
-  set(_source_file ${_args_SOURCE_FILE})
-  set(pxd_dependencies "")
-
-  # Determine dependencies.
-  # Add the pxd file with the same basename as the given pyx file.
-  get_source_file_property(pyx_location ${_source_file} LOCATION)
-  get_filename_component(pyx_path ${pyx_location} PATH)
-  get_filename_component(pyx_file_basename ${_source_file} NAME_WE)
-  unset(corresponding_pxd_file CACHE)
-  find_file(corresponding_pxd_file ${pyx_file_basename}.pxd
-            PATHS "${pyx_path}" ${cmake_include_directories}
-            NO_DEFAULT_PATH)
-  if(corresponding_pxd_file)
-    message(STATUS "Found ${corresponding_pxd_file}")
-    list(APPEND pxd_dependencies "${corresponding_pxd_file}")
-  endif()
-
-  # pxd files to check for additional dependencies
-  set(pxds_to_check "${_source_file}" "${pxd_dependencies}")
-  set(pxds_checked "")
-  set(number_pxds_to_check 1)
-  while(number_pxds_to_check GREATER 0)
-    foreach(pxd ${pxds_to_check})
-      list(APPEND pxds_checked "${pxd}")
-      list(REMOVE_ITEM pxds_to_check "${pxd}")
-
-      # look for C headers
-      #
-      #   cdef extern from "spam.h"
-      #
-      file(STRINGS "${pxd}" extern_from_statements
-           REGEX "cdef[ ]+extern[ ]+from.*$")
-      foreach(statement ${extern_from_statements})
-        # Had trouble getting the quote in the regex
-        string(REGEX REPLACE
-               "cdef[ ]+extern[ ]+from[ ]+[\"]([^\"]+)[\"].*" "\\1"
-               header "${statement}")
-        unset(header_location CACHE)
-        find_file(header_location ${header} PATHS ${cmake_include_directories})
-        if(header_location)
-          list(FIND c_header_dependencies "${header_location}" header_idx)
-          if(${header_idx} LESS 0)
-            list(APPEND c_header_dependencies "${header_location}")
-          endif()
-        endif()
-      endforeach()
-
-      # check for pxd dependencies
-      # Look for cimport statements.
-      #
-      #   cimport dishes
-      #   from dishes cimport spamdish
-      #
-      set(module_dependencies "")
-      file(STRINGS "${pxd}" cimport_statements REGEX cimport)
-      foreach(statement ${cimport_statements})
-        if(${statement} MATCHES from)
-          string(REGEX REPLACE
-                 "from[ ]+([^ ]+).*" "\\1"
-                 module "${statement}")
-        else()
-          string(REGEX REPLACE
-                 "cimport[ ]+([^ ]+).*" "\\1"
-                 module "${statement}")
-        endif()
-        list(APPEND module_dependencies ${module})
-      endforeach()
-
-      # check for pxi dependencies
-      # Look for include statements.
-      #
-      #  include "spamstuff.pxi"
-      #
-      set(include_dependencies "")
-      file(STRINGS "${pxd}" include_statements REGEX include)
-      foreach(statement ${include_statements})
-        string(REGEX REPLACE
-               "include[ ]+[\"]([^\"]+)[\"].*" "\\1"
-               module "${statement}")
-        list(APPEND include_dependencies ${module})
-      endforeach()
-
-      list(REMOVE_DUPLICATES module_dependencies)
-      list(REMOVE_DUPLICATES include_dependencies)
-
-      # Add modules to the files to check, if appropriate.
-      foreach(module ${module_dependencies})
-        unset(pxd_location CACHE)
-        find_file(pxd_location ${module}.pxd
-                  PATHS "${pyx_path}" ${cmake_include_directories}
-                  NO_DEFAULT_PATH)
-        if(pxd_location)
-          list(FIND pxds_checked ${pxd_location} pxd_idx)
-          if(${pxd_idx} LESS 0)
-            list(FIND pxds_to_check ${pxd_location} pxd_idx)
-            if(${pxd_idx} LESS 0)
-              list(APPEND pxds_to_check ${pxd_location})
-              list(APPEND pxd_dependencies ${pxd_location})
-            endif() # if it is not already going to be checked
-          endif() # if it has not already been checked
-        endif() # if pxd file can be found
-      endforeach() # for each module dependency discovered
-
-      # Add includes to the files to check, if appropriate.
-      foreach(_include ${include_dependencies})
-        unset(pxi_location CACHE)
-        find_file(pxi_location ${_include}
-                  PATHS "${pyx_path}" ${cmake_include_directories}
-                  NO_DEFAULT_PATH)
-        if(pxi_location)
-          list(FIND pxds_checked ${pxi_location} pxd_idx)
-          if(${pxd_idx} LESS 0)
-            list(FIND pxds_to_check ${pxi_location} pxd_idx)
-            if(${pxd_idx} LESS 0)
-              list(APPEND pxds_to_check ${pxi_location})
-              list(APPEND pxd_dependencies ${pxi_location})
-            endif() # if it is not already going to be checked
-          endif() # if it has not already been checked
-        endif() # if include file can be found
-      endforeach() # for each include dependency discovered
-    endforeach() # for each include file to check
-
-    list(LENGTH pxds_to_check number_pxds_to_check)
-  endwhile()
-
-  list(REMOVE_DUPLICATES pxd_dependencies)
-
-  set(${OUTPUT_VARIABLE} ${pxd_dependencies} PARENT_SCOPE)
-
-  # Remove their visibility to the user.
-  set(corresponding_pxd_file "" CACHE INTERNAL "")
-  set(header_location "" CACHE INTERNAL "")
-  set(pxd_location "" CACHE INTERNAL "")
-endfunction()
