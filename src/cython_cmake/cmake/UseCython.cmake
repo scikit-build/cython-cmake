@@ -4,10 +4,10 @@
 #
 # .. cmake:command:: Cython_compile_pyx
 #
-# Create a custom rule to generate the source code for a Python extension module
+# Create custom rules to generate the source code for a Python extension module
 # using cython.
 #
-#   Cython_compile_pyx(<CythonInput>
+#   Cython_compile_pyx(<pyx_file1> [<pyx_file2> ...]
 #                     [TARGET_LANGUAGE C | CXX]
 #                     [LANGUAGE_LEVEL 2 | 3 | 3str]
 #                     [OUTPUT_VAR <OutputVar>])
@@ -45,11 +45,11 @@
 #   find_package(Cython)
 #
 #   Cython_compile_pyx(_hello.pyx
-#     OUTPUT_VAR _hello_source_file
+#     OUTPUT_VAR _hello_source_files
 #   )
 #
 #   Python_add_library(_hello
-#     MODULE ${_hello_source_file}
+#     MODULE ${_hello_source_files}
 #     WITH_SOABI
 #   )
 #
@@ -241,11 +241,6 @@ function(Cython_compile_pyx)
 
   # Get source file location
   set(_source_files ${_args_UNPARSED_ARGUMENTS})
-  list(GET _source_files 0 _source_file)
-  list(LENGTH _source_files _source_file_count)
-  if (_source_file_count GREATER 1)
-    message(AUTHOR_WARNING "Cython_compile_pyx supports compiling only one file: ${_source_files}")
-  endif()
 
   # Set target language
   get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
@@ -286,45 +281,49 @@ function(Cython_compile_pyx)
 
   set(_language_level_arg "${_language_level_${_language_level}_arg}")
 
-  cmake_path(GET _source_file STEM _name)
-  set(generated_file "${CMAKE_CURRENT_BINARY_DIR}/${_name}.${_target_language_extension}")
-  set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
-
-  set(_output_var ${_name})
-  if(_args_OUTPUT_VAR)
-      set(_output_var ${_args_OUTPUT_VAR})
-  endif()
-  set(${_output_var} ${generated_file} PARENT_SCOPE)
-
-  file(RELATIVE_PATH generated_file_relative
-      ${CMAKE_BINARY_DIR} ${generated_file})
-
-  set(comment "Generating ${_target_language} source ${generated_file_relative}")
-
-  get_source_file_property(pyx_location ${_source_file} LOCATION)
-
   # Generated depfile is expected to have the ".dep" extension and be located along
   # side the generated source file.
   set(_depfile ${generated_file}.dep)
   set(_depfile_arg "-M")
 
-  # Add the command to run the compiler.
-  add_custom_command(
-    OUTPUT ${generated_file}
-    COMMAND ${CYTHON_EXECUTABLE}
-    ARGS
-      ${_target_language_arg}
-      ${_language_level_arg}
-      ${_args_CYTHON_ARGS}
-      ${_depfile_arg}
-      ${pyx_location}
-      --output-file ${generated_file}
-    DEPENDS
-      ${_source_file}
-    DEPFILE
-      ${_cython_depfile}
-    VERBATIM
-    COMMENT ${comment}
-  )
+  set(generated_files)
+
+  foreach(_source_file IN LISTS _source_files)
+    cmake_path(GET _source_file STEM _name)
+    set(generated_file "${CMAKE_CURRENT_BINARY_DIR}/${_name}.${_target_language_extension}")
+    set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
+
+    file(RELATIVE_PATH generated_file_relative
+        ${CMAKE_BINARY_DIR} ${generated_file})
+
+    set(comment "Generating ${_target_language} source ${generated_file_relative}")
+
+    get_source_file_property(pyx_location ${_source_file} LOCATION)
+
+    # Add the command to run the compiler.
+    add_custom_command(
+      OUTPUT ${generated_file}
+      COMMAND ${CYTHON_EXECUTABLE}
+      ARGS
+        ${_target_language_arg}
+        ${_language_level_arg}
+        ${_args_CYTHON_ARGS}
+        ${_depfile_arg}
+        ${pyx_location}
+        --output-file ${generated_file}
+      DEPENDS
+        ${_source_file}
+      DEPFILE
+        ${_cython_depfile}
+      VERBATIM
+      COMMENT ${comment}
+    )
+    list(APPEND generated_files ${generated_file})
+  endforeach()
+
+  if(_args_OUTPUT_VAR)
+    set(_output_var ${_args_OUTPUT_VAR})
+    set(${_output_var} ${generated_files} PARENT_SCOPE)
+  endif()
 
 endfunction()
