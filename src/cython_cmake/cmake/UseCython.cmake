@@ -259,6 +259,7 @@ function(add_cython_target _name)
       ${_source_file}
     DEPFILE
       ${_cython_depfile}
+    VERBATIM
     COMMENT ${comment}
   )
 
