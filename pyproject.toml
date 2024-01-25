@@ -32,6 +32,9 @@ classifiers = [
 dynamic = ["version"]
 dependencies = []
 
+[project.entry-points."cmake.module"]
+any = "cython_cmake.cmake"
+
 [project.optional-dependencies]
 test = [
   "pytest >=6",
