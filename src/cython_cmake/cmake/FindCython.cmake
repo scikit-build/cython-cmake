@@ -13,6 +13,11 @@
 #  ``CYTHON_FOUND``
 #    true if the program was found
 #
+# And the following target:
+#
+#  ``Cython::Cython``
+#    The Cython executable
+#
 # For more information on the Cython project, see https://cython.org/.
 #
 # *Cython is a language that makes writing C extensions for the Python language
@@ -33,6 +38,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #=============================================================================
+
+if(CMAKE_VERSION VERSION_LESS "3.20")
+  message(SEND_ERROR "CMake 3.20 required")
+endif()
 
 # Use the Cython executable that lives next to the Python executable
 # if it is a local installation.
@@ -56,7 +65,7 @@ else()
 endif()
 
 if(CYTHON_EXECUTABLE)
-  set(CYTHON_version_command ${CYTHON_EXECUTABLE} --version)
+  set(CYTHON_version_command "${CYTHON_EXECUTABLE}" --version)
 
   execute_process(COMMAND ${CYTHON_version_command}
                   OUTPUT_VARIABLE CYTHON_version_output
@@ -69,20 +78,31 @@ if(CYTHON_EXECUTABLE)
     set(_error_msg "Command \"${CYTHON_version_command}\" failed with")
     set(_error_msg "${_error_msg} output:\n${CYTHON_version_error}")
     message(SEND_ERROR "${_error_msg}")
+  elseif("${CYTHON_version_output}" MATCHES "^[Cc]ython version ([^,]+)")
+    set(CYTHON_VERSION "${CMAKE_MATCH_1}")
+  elseif("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
+    set(CYTHON_VERSION "${CMAKE_MATCH_1}")
   else()
-    if("${CYTHON_version_output}" MATCHES "^[Cc]ython version ([^,]+)")
-      set(CYTHON_VERSION "${CMAKE_MATCH_1}")
-    else()
-      if("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
-        set(CYTHON_VERSION "${CMAKE_MATCH_1}")
-      endif()
-    endif()
+    message(SEND_ERROR "Invalid Cython version output")
   endif()
 endif()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Cython REQUIRED_VARS CYTHON_EXECUTABLE)
+find_package_handle_standard_args(Cython
+  REQUIRED_VARS CYTHON_EXECUTABLE
+  VERSION_VAR ${CYTHON_VERSION}
+  HANDLE_VERSION_RANGE
+)
+
+if(CYTHON_FOUND)
+  if(NOT DEFINED Cython::Cython)
+    add_executable(Cython::Cython IMPORTED)
+    set_target_properties(Cython::Cython PROPERTIES
+        IMPORTED_LOCATION "${CYTHON_EXECUTABLE}"
+    )
+  endif()
+
+  include(UseCython)
+endif()
 
 mark_as_advanced(CYTHON_EXECUTABLE)
-
-include(UseCython)
