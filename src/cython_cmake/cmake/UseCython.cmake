@@ -8,7 +8,7 @@
 # using cython.
 #
 #   Cython_compile_pyx(<pyx_file>
-#                     LANGUAGE C | CXX
+#                     [LANGUAGE C | CXX]
 #                     [CYTHON_ARGS <args> ...]
 #                     [OUTPUT <OutputFile>]
 #                     [OUTPUT_VARIABLE <OutputVariable>]
@@ -17,7 +17,8 @@
 # Options:
 #
 # ``LANGUAGE [C | CXX]``
-#   Force the generation of either a C or C++ file. Required.
+#   Force the generation of either a C or C++ file. Recommended; will attempt
+#   to be deduced if not specified, defaults to C unless only CXX is enabled.
 #
 # ``CYTHON_ARGS <args>``
 #   Specify additional arguments for the cythonization process. Will default to
@@ -75,14 +76,21 @@ if(CMAKE_VERSION VERSION_LESS "3.7")
   message(FATAL_ERROR "CMake 3.7 required for DEPFILE")
 endif()
 
-function(Cython_compile_pyx INPUT)
+
+function(Cython_compile_pyx)
   cmake_parse_arguments(
-    PARSE_ARGV 1
+    PARSE_ARGV 0
     CYTHON
     ""
     "OUTPUT;LANGUAGE;OUTPUT_VARIABLE"
     "CYTHON_ARGS"
     )
+  set(ALL_INPUT ${CYTHON_UNPARSED_ARGUMENTS})
+  list(LENGTH ALL_INPUT INPUT_LENGTH)
+  if(NOT INPUT_LENGTH EQUAL 1)
+    message(FATAL_ERROR "One and only one input file must be specified, got '${ALL_INPUT}'")
+  endif()
+  list(GET ALL_INPUT 0 INPUT)
 
   if(DEFINED CYTHON_EXECUTABLE)
     set(_cython_command "${CYTHON_EXECUTABLE}")
@@ -99,34 +107,51 @@ function(Cython_compile_pyx INPUT)
     set(CYTHON_CYTHON_ARGS "${CYTHON_ARGS}")
   endif()
 
-  # Set target language (required)
+  # Set target language
   if(NOT CYTHON_LANGUAGE)
-    message(SEND_ERROR "cython_compile_pyx LANGUAGE keyword is required")
-  elseif(CYTHON_LANGUAGE STREQUAL C)
+    get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+
+    if("C" IN_LIST _languages AND "CXX" IN_LIST _languages)
+      # Try to compute language. Returns falsy if not found.
+      _cython_compute_language(CYTHON_LANGUAGE ${INPUT})
+      message(STATUS "${CYTHON_LANGUAGE}")
+    elseif("C" IN_LIST _languages)
+      # If only C is enabled globally, assume C
+      set(CYTHON_LANGUAGE C)
+    elseif("CXX" IN_LIST _languages)
+      # Likewise for CXX
+      set(CYTHON_LANGUAGE CXX)
+    else()
+      message(FATAL_ERROR "LANGUAGE keyword required if neither C nor CXX enabled globally")
+    endif()
+  endif()
+
+  # Default to C if not found
+  if(NOT CYTHON_LANGUAGE)
+    set(CYTHON_LANGUAGE C)
+  endif()
+
+  if(CYTHON_LANGUAGE STREQUAL C)
     set(language_arg "")
     set(language_ext ".c")
   elseif(CYTHON_LANGUAGE STREQUAL CXX)
     set(language_arg "--cplus")
     set(language_ext ".cxx")
   else()
-    message(SEND_ERROR "cython_compile_pyx LANGUAGE must be one of C or CXX")
+    message(FATAL_ERROR "cython_compile_pyx LANGUAGE must be one of C or CXX")
   endif()
 
   # Place the cython files in the current binary dir if no path given
   # Can use cmake_path for CMake 3.20+
   if(NOT CYTHON_OUTPUT)
-    # cmake_path(GET INPUT STEM basename)
     get_filename_component(basename "${INPUT}" NAME_WE)
 
-    # cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR "${basename}${language_ext}" OUTPUT_VARIABLE CYTHON_OUTPUT)
     set(CYTHON_OUPUT "${CMAKE_CURRENT_BINARY_DIR}/${basename}${language_ext}")
   endif()
 
-  # cmake_path(ABSOLUTE_PATH CYTHON_OUTPUT)
   get_filename_component(CYTHON_OUTPUT "${CYTHON_OUPUT}" ABSOLUTE)
 
   # Normalize the input path
-  # cmake_path(ABSOLUTE_PATH INPUT)
   get_filename_component(INPUT "${INPUT}" ABSOLUTE)
   set_source_files_properties("${INPUT}" PROPERTIES GENERATED TRUE)
 
@@ -155,7 +180,7 @@ function(Cython_compile_pyx INPUT)
       --depfile
       "${INPUT}"
       --output-file "${CYTHON_OUTPUT}"
-    DEPENDS
+    MAIN_DEPENDENCY
       "${INPUT}"
     DEPFILE
       "${depfile_path}"
@@ -164,4 +189,13 @@ function(Cython_compile_pyx INPUT)
     "Cythonizing source ${input_file_relative} to output ${generated_file_relative}"
   )
 
+endfunction()
+
+function(_cython_compute_language OUTPUT_VARIABLE FILENAME)
+  file(READ "${FILENAME}" FILE_CONTENT)
+  set(REGEX_PATTERN [=[^[[:space:]]*#[[:space:]]*distutils:.*language[[:space:]]*=[[:space:]]*(c\\+\\+|c)]=])
+  string(REGEX MATCH "${REGEX_PATTERN}" MATCH_RESULT "${FILE_CONTENT}")
+  string(TOUPPER "${MATCH_RESULT}" LANGUAGE_NAME)
+  string(REPLACE "+" "X" LANGUAGE_NAME "${LANGUAGE_NAME}")
+  set(${OUTPUT_VARIABLE} ${LANGUAGE_NAME} PARENT_SCOPE)
 endfunction()
