@@ -8,7 +8,7 @@
 # using cython.
 #
 #   Cython_compile_pyx(<pyx_file>
-#                     LANGUAGE C | CXX
+#                     [LANGUAGE C | CXX]
 #                     [CYTHON_ARGS <args> ...]
 #                     [OUTPUT <OutputFile>]
 #                     [OUTPUT_VARIABLE <OutputVariable>]
@@ -17,12 +17,12 @@
 # Options:
 #
 # ``LANGUAGE [C | CXX]``
-#   Force the generation of either a C or C++ file. Required.
+#   Force the generation of either a C or C++ file. Recommended; will attempt
+#   to be deduced if not specified.
 #
-# ``OUTPUT <OutputFile>``
-#   Specify a specific path for the output file as ``<OutputFile>``. By
-#   default, this will output into the current binary dir. A depfile will be
-#   created alongside this file as well.
+# ``CYTHON_ARGS <args>``
+#   Specify additional arguments for the cythonization process. Will default to
+#   the ``CYTHON_ARGS`` variable if not specified.
 #
 # ``OUTPUT <OutputFile>``
 #   Specify a specific path for the output file as ``<OutputFile>``. By
@@ -134,7 +134,12 @@ function(Cython_compile_pyx)
   cmake_path(ABSOLUTE_PATH INPUT)
   set_source_files_properties("${INPUT}" PROPERTIES GENERATED TRUE)
 
+  # Support
+  if(NOT CYTHON_CYTHON_ARGS AND DEFINED CYTHON_ARGS)
+    set(CYTHON_CYTHON_ARGS "${CYTHON_ARGS}")
+  endif()
 
+  # Output variable only if set
   if(CYTHON_OUTPUT_VARIABLE)
     set(${CYTHON_OUTPUT_VARIABLE} "${CYTHON_OUTPUT}" PARENT_SCOPE)
   endif()
