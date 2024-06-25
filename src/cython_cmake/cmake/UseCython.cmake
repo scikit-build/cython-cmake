@@ -56,13 +56,6 @@
 #   )
 #
 #
-# .. cmake:command:: add_cython_target
-#
-# Create a custom rule to generate the source code for a Python extension
-# module using cython. DEPRECATED; provided for backward compatibility with
-# scikit-build (classic) only.
-#
-#
 #=============================================================================
 # Copyright 2011 Kitware, Inc.
 #
@@ -83,93 +76,6 @@ if(CMAKE_VERSION VERSION_LESS "3.20")
   message(SEND_ERROR "CMake 3.20 required")
 endif()
 
-
-function(add_cython_target _name)
-  message(WARNING "DEPRECATED: use cython_compile_pyx instead of add_cython_target.")
-  set(_options C CXX PY2 PY3)
-  set(_one_value OUTPUT_VAR)
-  set(_multi_value )
-
-  cmake_parse_arguments(_args
-    "${_options}"
-    "${_one_value}"
-    "${_multi_value}"
-    ${ARGN}
-    )
-
-  # Configuration options.
-  set(CYTHON_ANNOTATE OFF
-      CACHE BOOL "Create an annotated .html file when compiling *.pyx.")
-
-  set(CYTHON_FLAGS "" CACHE STRING
-      "Extra flags to the cython compiler.")
-  mark_as_advanced(CYTHON_ANNOTATE CYTHON_FLAGS)
-
-  if(_args_C)
-    set(_target_language "C")
-  endif()
-  if(_args_CXX)
-    set(_target_language "CXX")
-  endif()
-
-  list(GET _args_UNPARSED_ARGUMENTS 0 _arg0)
-
-  # if provided, use _arg0 as the input file path
-  if(_arg0)
-    set(_source_file ${_arg0})
-
-  # otherwise, must determine source file from name, or vice versa
-  else()
-    get_filename_component(_name_ext "${_name}" EXT)
-
-    # if extension provided, _name is the source file
-    if(_name_ext)
-      set(_source_file ${_name})
-      get_filename_component(_name "${_source_file}" NAME_WE)
-
-    # otherwise, assume the source file is ${_name}.pyx
-    else()
-      set(_source_file ${_name}.pyx)
-    endif()
-  endif()
-
-  # Set additional flags.
-  set(_cython_args)
-  if(_args_PY2)
-    list(APPEND "--2")
-  endif()
-  if(_args_PY3)
-    list(APPEND "--3")
-  endif()
-
-  if(CYTHON_ANNOTATE)
-    list(APPEND _cython_args "--annotate")
-  endif()
-
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR
-      CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    list(APPEND _cython_args
-      "--gdb"
-      "--line-directives"
-    )
-  endif()
-  string(STRIP "${CYTHON_FLAGS}" _stripped_cython_flags)
-  if(_stripped_cython_flags)
-    string(REGEX REPLACE " " ";" CYTHON_FLAGS_LIST "${_stripped_cython_flags}")
-    list(APPEND _cython_args ${CYTHON_FLAGS_LIST})
-  endif()
-
-  Cython_compile_pyx(
-    "${_source_file}"
-    LANGUAGE ${_target_language}
-    CYTHON_ARGS ${_cython_args}
-    OUTPUT_VARIABLE ${_args_OUTPUT_VAR}
-  )
-
-  if(_args_OUTPUT_VAR)
-    set(${_args_OUTPUT_VAR} ${${_args_OUTPUT_VAR}} PARENT_SCOPE)
-  endif()
-endfunction()
 
 function(Cython_compile_pyx INPUT)
   cmake_parse_arguments(
