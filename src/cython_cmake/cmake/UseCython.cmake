@@ -164,8 +164,8 @@ function(Cython_compile_pyx)
     OUTPUT
       "${CYTHON_OUTPUT}"
       "${depfile_path}"
-    COMMAND Cython::Cython
-    ARGS
+    COMMAND
+      Cython::Cython
       ${language_arg}
       ${CYTHON_CYTHON_ARGS}
       --depfile
