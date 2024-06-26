@@ -34,7 +34,9 @@ jobs:
           pipx run nox -s pylint
 
   checks:
-    name: Check Python ${{ matrix.python-version }} on ${{ matrix.runs-on }}
+    name:
+      🐍 ${{ matrix.python-version }} on ${{ matrix.runs-on }} ${{ matrix.cmake
+      }}
     runs-on: ${{ matrix.runs-on }}
     needs: [pre-commit]
     strategy:
@@ -46,6 +48,9 @@ jobs:
         include:
           - python-version: pypy-3.10
             runs-on: ubuntu-latest
+          - python-version: "3.9"
+            runs-on: ubuntu-latest
+            cmake: "3.20.x"
 
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +61,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
+
+      - uses: jwlawson/actions-setup-cmake@v2
+        if: matrix.cmake != ''
+        with:
+          cmake-version: ${{ matrix.cmake }}
 
       - uses: yezz123/setup-uv@v4
 
