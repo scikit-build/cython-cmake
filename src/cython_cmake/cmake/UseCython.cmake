@@ -73,7 +73,7 @@
 #=============================================================================
 
 if(CMAKE_VERSION VERSION_LESS "3.7")
-  message(SEND_ERROR "CMake 3.7 required for DEPFILE")
+  message(FATAL_ERROR "CMake 3.7 required for DEPFILE")
 endif()
 
 
@@ -179,7 +179,6 @@ function(Cython_compile_pyx)
     COMMENT
     "Cythonizing source ${input_file_relative} to output ${generated_file_relative}"
   )
-
 endfunction()
 
 function(_cython_compute_language OUTPUT_VARIABLE FILENAME)
