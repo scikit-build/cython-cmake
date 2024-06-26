@@ -72,8 +72,8 @@
 # limitations under the License.
 #=============================================================================
 
-if(CMAKE_VERSION VERSION_LESS "3.20")
-  message(FATAL_ERROR "CMake 3.20 required")
+if(CMAKE_VERSION VERSION_LESS "3.7")
+  message(SEND_ERROR "CMake 3.7 required for DEPFILE")
 endif()
 
 
@@ -124,14 +124,21 @@ function(Cython_compile_pyx)
   endif()
 
   # Place the cython files in the current binary dir if no path given
+  # Can use cmake_path for CMake 3.20+
   if(NOT CYTHON_OUTPUT)
-    cmake_path(GET INPUT STEM basename)
-    cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR "${basename}${langauge_ext}" OUTPUT_VARIABLE CYTHON_OUTPUT)
+    # cmake_path(GET INPUT STEM basename)
+    get_filename_component(basename "${INPUT}" NAME_WE)
+
+    # cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR "${basename}${langauge_ext}" OUTPUT_VARIABLE CYTHON_OUTPUT)
+    set(CYTHON_OUPUT "${CMAKE_CURRENT_BINARY_DIR}/${basename}${langauge_ext}")
   endif()
-  cmake_path(ABSOLUTE_PATH CYTHON_OUTPUT)
+
+  # cmake_path(ABSOLUTE_PATH CYTHON_OUTPUT)
+  get_filename_component(CYTHON_OUTPUT "${CYTHON_OUPUT}" ABSOLUTE)
 
   # Normalize the input path
-  cmake_path(ABSOLUTE_PATH INPUT)
+  # cmake_path(ABSOLUTE_PATH INPUT)
+  get_filename_component(INPUT "${INPUT}" ABSOLUTE)
   set_source_files_properties("${INPUT}" PROPERTIES GENERATED TRUE)
 
   # Support

@@ -18,6 +18,8 @@
 #  ``Cython::Cython``
 #    The Cython executable
 #
+# A range of versions is supported on CMake 3.19+.
+#
 # For more information on the Cython project, see https://cython.org/.
 #
 # *Cython is a language that makes writing C extensions for the Python language
@@ -38,10 +40,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #=============================================================================
-
-if(CMAKE_VERSION VERSION_LESS "3.20")
-  message(SEND_ERROR "CMake 3.20 required")
-endif()
 
 # Use the Cython executable that lives next to the Python executable
 # if it is a local installation.
@@ -88,11 +86,19 @@ if(CYTHON_EXECUTABLE)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Cython
-  REQUIRED_VARS CYTHON_EXECUTABLE
-  VERSION_VAR ${CYTHON_VERSION}
-  HANDLE_VERSION_RANGE
-)
+
+if(CMAKE_VERSION VERSION_LESS 3.19)
+  find_package_handle_standard_args(Cython
+    REQUIRED_VARS CYTHON_EXECUTABLE
+    VERSION_VAR ${CYTHON_VERSION}
+  )
+else()
+  find_package_handle_standard_args(Cython
+    REQUIRED_VARS CYTHON_EXECUTABLE
+    VERSION_VAR ${CYTHON_VERSION}
+    HANDLE_VERSION_RANGE
+  )
+endif()
 
 if(CYTHON_FOUND)
   if(NOT DEFINED Cython::Cython)
