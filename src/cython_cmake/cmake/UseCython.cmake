@@ -64,6 +64,9 @@
 # limitations under the License.
 #=============================================================================
 
+if(CMAKE_VERSION VERSION_LESS "3.7")
+  message(SEND_ERROR "CMake 3.7 required for DEPFILE")
+endif()
 
 function(Cython_compile_pyx)
   set(_options )
@@ -116,7 +119,11 @@ function(Cython_compile_pyx)
   set(generated_files)
 
   foreach(_source_file IN LISTS _source_files)
-    cmake_path(GET _source_file STEM _name)
+
+    # Can use cmake_path for CMake 3.20+
+    # cmake_path(GET _source_file STEM _name)
+    get_filename_component(_name "${_source_file}" NAME_WE)
+
     set(generated_file "${CMAKE_CURRENT_BINARY_DIR}/${_name}.${_language_extension}")
     set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
 
