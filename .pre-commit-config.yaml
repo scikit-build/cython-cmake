@@ -74,6 +74,11 @@ repos:
         language: pygrep
         entry: PyBind|Numpy|Cmake|CCache|Github|PyTest
         exclude: .pre-commit-config.yaml
+      - id: disallow-misspell
+        name: Disallow misspelled words
+        language: pygrep
+        entry: "[Ll]angauge"
+        exclude: .pre-commit-config.yaml
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: "v0.18"

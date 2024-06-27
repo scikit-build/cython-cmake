@@ -94,16 +94,16 @@ function(Cython_compile_pyx)
 
   # Set target language
   if(NOT CYTHON_LANGUAGE)
-    get_property(_langauges GLOBAL PROPERTY ENABLED_LANGUAGES)
+    get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 
-    if("C" IN_LIST _langauges AND "CXX" IN_LIST _langauges)
+    if("C" IN_LIST _languages AND "CXX" IN_LIST _languages)
       # Try to compute language. Returns falsy if not found.
       _cython_compute_language(CYTHON_LANGUAGE ${INPUT})
       message(STATUS "${CYTHON_LANGUAGE}")
-    elseif("C" IN_LIST _langauges)
+    elseif("C" IN_LIST _languages)
       # If only C is enabled globally, assume C
       set(CYTHON_LANGUAGE C)
-    elseif("CXX" IN_LIST _langauges)
+    elseif("CXX" IN_LIST _languages)
       # Likewise for CXX
       set(CYTHON_LANGUAGE CXX)
     else()
@@ -118,10 +118,10 @@ function(Cython_compile_pyx)
 
   if(CYTHON_LANGUAGE STREQUAL C)
     set(language_arg "")
-    set(langauge_ext ".c")
+    set(language_ext ".c")
   elseif(CYTHON_LANGUAGE STREQUAL CXX)
     set(language_arg "--cplus")
-    set(langauge_ext ".cxx")
+    set(language_ext ".cxx")
   else()
     message(FATAL_ERROR "cython_compile_pyx LANGUAGE must be one of C or CXX")
   endif()
@@ -131,7 +131,7 @@ function(Cython_compile_pyx)
   if(NOT CYTHON_OUTPUT)
     get_filename_component(basename "${INPUT}" NAME_WE)
 
-    set(CYTHON_OUPUT "${CMAKE_CURRENT_BINARY_DIR}/${basename}${langauge_ext}")
+    set(CYTHON_OUPUT "${CMAKE_CURRENT_BINARY_DIR}/${basename}${language_ext}")
   endif()
 
   get_filename_component(CYTHON_OUTPUT "${CYTHON_OUPUT}" ABSOLUTE)
