@@ -76,7 +76,6 @@ if(CMAKE_VERSION VERSION_LESS "3.7")
   message(FATAL_ERROR "CMake 3.7 required for DEPFILE")
 endif()
 
-
 function(Cython_compile_pyx)
   cmake_parse_arguments(
     PARSE_ARGV 0
@@ -91,6 +90,16 @@ function(Cython_compile_pyx)
     message(FATAL_ERROR "One and only one input file must be specified, got '${ALL_INPUT}'")
   endif()
   list(GET ALL_INPUT 0 INPUT)
+
+  if(DEFINED CYTHON_EXECUTABLE)
+    set(_cython_command "${CYTHON_EXECUTABLE}")
+  elseif(DEFINED Python_EXECUTABLE)
+    set(_cython_command "${Python_EXECUTABLE}" -m cython)
+  elseif(DEFINED Python3_EXECUTABLE)
+    set(_cython_command "${Python3_EXECUTABLE}" -m cython)
+  else()
+    message(FATAL_ERROR "Cython executable not found")
+  endif()
 
   # Set target language
   if(NOT CYTHON_LANGUAGE)
@@ -164,7 +173,7 @@ function(Cython_compile_pyx)
       "${CYTHON_OUTPUT}"
       "${depfile_path}"
     COMMAND
-      Cython::Cython
+      ${_cython_command}
       ${language_arg}
       ${CYTHON_CYTHON_ARGS}
       --depfile
