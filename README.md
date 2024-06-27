@@ -44,7 +44,7 @@ given with `CYTHON_ARGS`, and if this is not set, it will take a default from a
 
 If the `LANGUAGE` is not given, and both `C` and `CXX` are enabled globally,
 then the language will try to be deduced from a `# distutils: language=...`
-comment in the source file. It is an error if it cannot be deduced.
+comment in the source file, and C will be used if not found.
 
 This utility relies on the `DEPFILE` feature introduced for Ninja in CMake 3.7,
 and added for Make in CMake 3.20, and Visual Studio & Xcode in CMake 3.21.

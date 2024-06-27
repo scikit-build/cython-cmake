@@ -81,24 +81,23 @@ if(CYTHON_EXECUTABLE)
   elseif("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
     set(CYTHON_VERSION "${CMAKE_MATCH_1}")
   else()
-    message(SEND_ERROR "Invalid Cython version output")
+    message(FATAL_ERROR "Invalid Cython version output")
   endif()
 endif()
 
 include(FindPackageHandleStandardArgs)
 
 if(CMAKE_VERSION VERSION_LESS 3.19)
-  find_package_handle_standard_args(Cython
-    REQUIRED_VARS CYTHON_EXECUTABLE
-    VERSION_VAR ${CYTHON_VERSION}
-  )
+  set(_handle_version_range)
 else()
-  find_package_handle_standard_args(Cython
-    REQUIRED_VARS CYTHON_EXECUTABLE
-    VERSION_VAR ${CYTHON_VERSION}
-    HANDLE_VERSION_RANGE
-  )
+  set(_handle_version_range HANDLE_VERSION_RANGE)
 endif()
+
+find_package_handle_standard_args(Cython
+  REQUIRED_VARS CYTHON_EXECUTABLE
+  VERSION_VAR ${CYTHON_VERSION}
+  ${_handle_version_range}
+)
 
 if(CYTHON_FOUND)
   if(NOT DEFINED Cython::Cython)

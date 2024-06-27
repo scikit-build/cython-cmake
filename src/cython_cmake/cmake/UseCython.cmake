@@ -18,7 +18,7 @@
 #
 # ``LANGUAGE [C | CXX]``
 #   Force the generation of either a C or C++ file. Recommended; will attempt
-#   to be deduced if not specified.
+#   to be deduced if not specified, defaults to C unless only CXX is enabled.
 #
 # ``CYTHON_ARGS <args>``
 #   Specify additional arguments for the cythonization process. Will default to
@@ -94,26 +94,29 @@ function(Cython_compile_pyx)
 
   # Set target language
   if(NOT CYTHON_LANGUAGE)
-    get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+    get_property(_langauges GLOBAL PROPERTY ENABLED_LANGUAGES)
 
-    if("C" IN_LIST _langauges AND "CXX" IN_LIST _languages)
+    if("C" IN_LIST _langauges AND "CXX" IN_LIST _langauges)
       # Try to compute language. Returns falsy if not found.
       _cython_compute_language(CYTHON_LANGUAGE ${INPUT})
       message(STATUS "${CYTHON_LANGUAGE}")
-    elseif("C" IN_LIST _languages)
+    elseif("C" IN_LIST _langauges)
       # If only C is enabled globally, assume C
       set(CYTHON_LANGUAGE C)
-    elseif("CXX" IN_LIST _languages)
+    elseif("CXX" IN_LIST _langauges)
       # Likewise for CXX
-      set(CYTHON_LANGUAGE "CXX")
+      set(CYTHON_LANGUAGE CXX)
     else()
       message(FATAL_ERROR "LANGUAGE keyword required if neither C nor CXX enabled globally")
     endif()
   endif()
 
+  # Default to C if not found
   if(NOT CYTHON_LANGUAGE)
-    message(FATAL_ERROR "LANGUAGE keyword or `# distutils: language=...` required if C and CXX are enabled globally")
-  elseif(CYTHON_LANGUAGE STREQUAL C)
+    set(CYTHON_LANGUAGE C)
+  endif()
+
+  if(CYTHON_LANGUAGE STREQUAL C)
     set(language_arg "")
     set(langauge_ext ".c")
   elseif(CYTHON_LANGUAGE STREQUAL CXX)
@@ -126,18 +129,14 @@ function(Cython_compile_pyx)
   # Place the cython files in the current binary dir if no path given
   # Can use cmake_path for CMake 3.20+
   if(NOT CYTHON_OUTPUT)
-    # cmake_path(GET INPUT STEM basename)
     get_filename_component(basename "${INPUT}" NAME_WE)
 
-    # cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR "${basename}${langauge_ext}" OUTPUT_VARIABLE CYTHON_OUTPUT)
     set(CYTHON_OUPUT "${CMAKE_CURRENT_BINARY_DIR}/${basename}${langauge_ext}")
   endif()
 
-  # cmake_path(ABSOLUTE_PATH CYTHON_OUTPUT)
   get_filename_component(CYTHON_OUTPUT "${CYTHON_OUPUT}" ABSOLUTE)
 
   # Normalize the input path
-  # cmake_path(ABSOLUTE_PATH INPUT)
   get_filename_component(INPUT "${INPUT}" ABSOLUTE)
   set_source_files_properties("${INPUT}" PROPERTIES GENERATED TRUE)
 
