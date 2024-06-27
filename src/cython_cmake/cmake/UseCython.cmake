@@ -146,10 +146,10 @@ function(Cython_compile_pyx)
   if(NOT CYTHON_OUTPUT)
     get_filename_component(basename "${INPUT}" NAME_WE)
 
-    set(CYTHON_OUPUT "${CMAKE_CURRENT_BINARY_DIR}/${basename}${language_ext}")
+    set(CYTHON_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${basename}${language_ext}")
+  elseif(NOT IS_ABSOLUTE CYTHON_OUTPUT)
+    set(CYTHON_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${CYTHON_OUTPUT}")
   endif()
-
-  get_filename_component(CYTHON_OUTPUT "${CYTHON_OUPUT}" ABSOLUTE)
 
   # Normalize the input path
   get_filename_component(INPUT "${INPUT}" ABSOLUTE)
