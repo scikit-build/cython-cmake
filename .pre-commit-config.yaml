@@ -55,6 +55,7 @@ repos:
         args: []
         additional_dependencies:
           - pytest
+          - scikit-build-core
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.3.0"
@@ -72,6 +73,11 @@ repos:
         name: Disallow improper capitalization
         language: pygrep
         entry: PyBind|Numpy|Cmake|CCache|Github|PyTest
+        exclude: .pre-commit-config.yaml
+      - id: disallow-misspell
+        name: Disallow misspelled words
+        language: pygrep
+        entry: "[Ll]angauge"
         exclude: .pre-commit-config.yaml
 
   - repo: https://github.com/abravalheri/validate-pyproject

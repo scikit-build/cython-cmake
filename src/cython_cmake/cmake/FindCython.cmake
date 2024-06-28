@@ -13,6 +13,13 @@
 #  ``CYTHON_FOUND``
 #    true if the program was found
 #
+# And the following target:
+#
+#  ``Cython::Cython``
+#    The Cython executable
+#
+# A range of versions is supported on CMake 3.19+.
+#
 # For more information on the Cython project, see https://cython.org/.
 #
 # *Cython is a language that makes writing C extensions for the Python language
@@ -56,7 +63,7 @@ else()
 endif()
 
 if(CYTHON_EXECUTABLE)
-  set(CYTHON_version_command ${CYTHON_EXECUTABLE} --version)
+  set(CYTHON_version_command "${CYTHON_EXECUTABLE}" --version)
 
   execute_process(COMMAND ${CYTHON_version_command}
                   OUTPUT_VARIABLE CYTHON_version_output
@@ -69,20 +76,38 @@ if(CYTHON_EXECUTABLE)
     set(_error_msg "Command \"${CYTHON_version_command}\" failed with")
     set(_error_msg "${_error_msg} output:\n${CYTHON_version_error}")
     message(SEND_ERROR "${_error_msg}")
+  elseif("${CYTHON_version_output}" MATCHES "^[Cc]ython version ([^,]+)")
+    set(CYTHON_VERSION "${CMAKE_MATCH_1}")
+  elseif("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
+    set(CYTHON_VERSION "${CMAKE_MATCH_1}")
   else()
-    if("${CYTHON_version_output}" MATCHES "^[Cc]ython version ([^,]+)")
-      set(CYTHON_VERSION "${CMAKE_MATCH_1}")
-    else()
-      if("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
-        set(CYTHON_VERSION "${CMAKE_MATCH_1}")
-      endif()
-    endif()
+    message(FATAL_ERROR "Invalid Cython version output")
   endif()
 endif()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Cython REQUIRED_VARS CYTHON_EXECUTABLE)
+
+if(CMAKE_VERSION VERSION_LESS 3.19)
+  set(_handle_version_range)
+else()
+  set(_handle_version_range HANDLE_VERSION_RANGE)
+endif()
+
+find_package_handle_standard_args(Cython
+  REQUIRED_VARS CYTHON_EXECUTABLE
+  VERSION_VAR ${CYTHON_VERSION}
+  ${_handle_version_range}
+)
+
+if(CYTHON_FOUND)
+  if(NOT DEFINED Cython::Cython)
+    add_executable(Cython::Cython IMPORTED)
+    set_target_properties(Cython::Cython PROPERTIES
+        IMPORTED_LOCATION "${CYTHON_EXECUTABLE}"
+    )
+  endif()
+
+  include(UseCython)
+endif()
 
 mark_as_advanced(CYTHON_EXECUTABLE)
-
-include(UseCython)
