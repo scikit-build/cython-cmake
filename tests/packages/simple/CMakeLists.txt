@@ -6,6 +6,7 @@ find_package(
   COMPONENTS Interpreter Development.Module
   REQUIRED)
 find_package(Cython MODULE REQUIRED VERSION 3.0)
+include(UseCython)
 
 cython_compile_pyx(simple.pyx LANGUAGE C OUTPUT_VARIABLE simple_c)
 

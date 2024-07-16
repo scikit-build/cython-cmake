@@ -18,7 +18,7 @@
 #  ``Cython::Cython``
 #    The Cython executable
 #
-# A range of versions is supported on CMake 3.19+.
+# A range of versions is supported on CMake 3.19+. See also UseCython.
 #
 # For more information on the Cython project, see https://cython.org/.
 #
@@ -109,5 +109,3 @@ if(CYTHON_FOUND)
 endif()
 
 mark_as_advanced(CYTHON_EXECUTABLE)
-
-include(UseCython)
