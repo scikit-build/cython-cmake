@@ -37,6 +37,7 @@
 # .. code-block:: cmake
 #
 #   find_package(Cython)
+#   include(UseCython)
 #
 #   Cython_compile_pyx(_hello.pyx
 #     OUTPUT_VARIABLE _hello_source_files
