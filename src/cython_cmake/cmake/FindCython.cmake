@@ -18,6 +18,8 @@
 #  ``Cython::Cython``
 #    The Cython executable
 #
+# A range of versions is supported on CMake 3.19+.
+#
 # For more information on the Cython project, see https://cython.org/.
 #
 # *Cython is a language that makes writing C extensions for the Python language
@@ -84,9 +86,17 @@ if(CYTHON_EXECUTABLE)
 endif()
 
 include(FindPackageHandleStandardArgs)
+
+if(CMAKE_VERSION VERSION_LESS 3.19)
+  set(_handle_version_range)
+else()
+  set(_handle_version_range HANDLE_VERSION_RANGE)
+endif()
+
 find_package_handle_standard_args(Cython
   REQUIRED_VARS CYTHON_EXECUTABLE
   VERSION_VAR ${CYTHON_VERSION}
+  ${_handle_version_range}
 )
 
 if(CYTHON_FOUND)
