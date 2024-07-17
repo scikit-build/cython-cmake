@@ -28,6 +28,9 @@
 #   Using the Python-3str syntax and semantics means there cython does not assume
 #   unicode is used by by default for string literals under Python 2
 #
+# ``CYTHON_ARGS <args>``
+#   Specify additional arguments for the cythonization process.
+#
 # ``OUTPUT_VAR <OutputVar>``
 #   Set the variable ``<OutputVar>`` in the parent scope to the path to the
 #   generated source file.  By default, ``<Name>`` is used as the output
