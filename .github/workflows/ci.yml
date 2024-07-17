@@ -29,16 +29,13 @@ jobs:
         with:
           extra_args: --hook-stage manual --all-files
       - name: Run PyLint
-        run: |
-          echo "::add-matcher::$GITHUB_WORKSPACE/.github/matchers/pylint.json"
-          pipx run nox -s pylint
+        run: pipx run nox -s pylint -- --output-format=github
 
   checks:
     name:
       🐍 ${{ matrix.python-version }} on ${{ matrix.runs-on }} ${{ matrix.cmake
       }}
     runs-on: ${{ matrix.runs-on }}
-    needs: [pre-commit]
     strategy:
       fail-fast: false
       matrix:
