@@ -79,7 +79,10 @@ if(CYTHON_EXECUTABLE)
 endif()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Cython REQUIRED_VARS CYTHON_EXECUTABLE)
+find_package_handle_standard_args(Cython
+  REQUIRED_VARS CYTHON_EXECUTABLE
+  VERSION_VAR ${CYTHON_VERSION}
+)
 
 mark_as_advanced(CYTHON_EXECUTABLE)
 
