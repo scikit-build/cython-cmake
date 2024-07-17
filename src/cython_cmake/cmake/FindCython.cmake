@@ -13,6 +13,11 @@
 #  ``CYTHON_FOUND``
 #    true if the program was found
 #
+# And the following target:
+#
+#  ``Cython::Cython``
+#    The Cython executable
+#
 # For more information on the Cython project, see https://cython.org/.
 #
 # *Cython is a language that makes writing C extensions for the Python language
@@ -83,6 +88,15 @@ find_package_handle_standard_args(Cython
   REQUIRED_VARS CYTHON_EXECUTABLE
   VERSION_VAR ${CYTHON_VERSION}
 )
+
+if(CYTHON_FOUND)
+  if(NOT DEFINED Cython::Cython)
+    add_executable(Cython::Cython IMPORTED)
+    set_target_properties(Cython::Cython PROPERTIES
+        IMPORTED_LOCATION "${CYTHON_EXECUTABLE}"
+    )
+  endif()
+endif()
 
 mark_as_advanced(CYTHON_EXECUTABLE)
 
