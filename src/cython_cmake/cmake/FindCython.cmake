@@ -81,7 +81,7 @@ if(CYTHON_EXECUTABLE)
   elseif("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
     set(CYTHON_VERSION "${CMAKE_MATCH_1}")
   else()
-    message(SEND_ERROR "Invalid Cython version output")
+    message(FATAL_ERROR "Invalid Cython version output")
   endif()
 endif()
 
