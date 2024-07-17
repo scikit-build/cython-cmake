@@ -77,6 +77,16 @@ function(Cython_compile_pyx)
     ${ARGN}
     )
 
+  if(DEFINED CYTHON_EXECUTABLE)
+    set(_cython_command "${CYTHON_EXECUTABLE}")
+  elseif(DEFINED Python_EXECUTABLE)
+    set(_cython_command "${Python_EXECUTABLE}" -m cython)
+  elseif(DEFINED Python3_EXECUTABLE)
+    set(_cython_command "${Python3_EXECUTABLE}" -m cython)
+  else()
+    message(FATAL_ERROR "Cython executable not found")
+  endif()
+
   # Get source file location
   set(_source_files ${_args_UNPARSED_ARGUMENTS})
 
@@ -125,7 +135,8 @@ function(Cython_compile_pyx)
     # Add the command to run the compiler.
     add_custom_command(
       OUTPUT ${generated_file}
-      COMMAND ${CYTHON_EXECUTABLE}
+      COMMAND
+        ${_cython_command}
       ARGS
         ${_language_arg}
         ${_args_CYTHON_ARGS}
