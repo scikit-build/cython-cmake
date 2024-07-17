@@ -103,17 +103,17 @@ function(Cython_compile_pyx)
   set(_language_arg ${_language_${_language}_arg})
   set(_language_extension ${_language_${_language}_extension})
 
-  # Generated depfile is expected to have the ".dep" extension and be located along
-  # side the generated source file.
-  set(_depfile ${generated_file}.dep)
-  set(_depfile_arg "-M")
-
   set(generated_files)
 
   foreach(_source_file IN LISTS _source_files)
     cmake_path(GET _source_file STEM _name)
     set(generated_file "${CMAKE_CURRENT_BINARY_DIR}/${_name}.${_language_extension}")
     set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
+
+    # Generated depfile is expected to have the ".dep" extension and be located along
+    # side the generated source file.
+    set(_depfile ${generated_file}.dep)
+    set(_depfile_arg "-M")
 
     file(RELATIVE_PATH generated_file_relative
         ${CMAKE_BINARY_DIR} ${generated_file})
@@ -135,7 +135,7 @@ function(Cython_compile_pyx)
       DEPENDS
         ${_source_file}
       DEPFILE
-        ${_cython_depfile}
+        ${_depfile}
       VERBATIM
       COMMENT ${comment}
     )
