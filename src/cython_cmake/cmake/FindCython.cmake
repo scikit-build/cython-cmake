@@ -56,7 +56,7 @@ else()
 endif()
 
 if(CYTHON_EXECUTABLE)
-  set(CYTHON_version_command ${CYTHON_EXECUTABLE} --version)
+  set(CYTHON_version_command "${CYTHON_EXECUTABLE}" --version)
 
   execute_process(COMMAND ${CYTHON_version_command}
                   OUTPUT_VARIABLE CYTHON_version_output
@@ -69,14 +69,12 @@ if(CYTHON_EXECUTABLE)
     set(_error_msg "Command \"${CYTHON_version_command}\" failed with")
     set(_error_msg "${_error_msg} output:\n${CYTHON_version_error}")
     message(SEND_ERROR "${_error_msg}")
+  elseif("${CYTHON_version_output}" MATCHES "^[Cc]ython version ([^,]+)")
+    set(CYTHON_VERSION "${CMAKE_MATCH_1}")
+  elseif("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
+    set(CYTHON_VERSION "${CMAKE_MATCH_1}")
   else()
-    if("${CYTHON_version_output}" MATCHES "^[Cc]ython version ([^,]+)")
-      set(CYTHON_VERSION "${CMAKE_MATCH_1}")
-    else()
-      if("${CYTHON_version_error}" MATCHES "^[Cc]ython version ([^,]+)")
-        set(CYTHON_VERSION "${CMAKE_MATCH_1}")
-      endif()
-    endif()
+    message(SEND_ERROR "Invalid Cython version output")
   endif()
 endif()
 
