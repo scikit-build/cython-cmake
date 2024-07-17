@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 from pathlib import Path
 
 import nox
 
 DIR = Path(__file__).parent.resolve()
 
+nox.needs_version = ">=2024.3.2"
+nox.options.default_venv_backend = "uv|virtualenv"
 nox.options.sessions = ["lint", "pylint", "tests"]
 
 
@@ -38,7 +39,7 @@ def tests(session: nox.Session) -> None:
     """
     Run the unit and regular tests.
     """
-    session.install(".[test]")
+    session.install("-e.[test]")
     session.run("pytest", *session.posargs)
 
 
@@ -108,10 +109,6 @@ def build(session: nox.Session) -> None:
     """
     Build an SDist and wheel.
     """
-
-    build_path = DIR.joinpath("build")
-    if build_path.exists():
-        shutil.rmtree(build_path)
 
     session.install("build")
     session.run("python", "-m", "build")

@@ -38,9 +38,8 @@ any = "cython_cmake.cmake"
 [project.optional-dependencies]
 test = [
   "pytest >=6",
-]
-dev = [
-  "pytest >=6",
+  "scikit-build-core",
+  "cython",
 ]
 docs = [
   "sphinx>=7.0",
@@ -62,9 +61,11 @@ version.source = "vcs"
 build.hooks.vcs.version-file = "src/cython_cmake/_version.py"
 
 [tool.hatch.envs.default]
-features = ["test"]
-scripts.test = "pytest {args}"
+installer = "uv"
 
+[tool.hatch.envs.hatch-test]
+features = ["test"]
+extra-dependencies = ["cmake", "ninja"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
