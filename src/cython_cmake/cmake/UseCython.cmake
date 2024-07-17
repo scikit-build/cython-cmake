@@ -10,7 +10,7 @@
 #   Cython_compile_pyx(<pyx_file1> [<pyx_file2> ...]
 #                     [TARGET_LANGUAGE C | CXX]
 #                     [LANGUAGE_LEVEL 2 | 3 | 3str]
-#                     [OUTPUT_VAR <OutputVar>])
+#                     [OUTPUT_VARIABLE <OutputVariable>])
 #
 # Options:
 #
@@ -31,14 +31,14 @@
 # ``CYTHON_ARGS <args>``
 #   Specify additional arguments for the cythonization process.
 #
-# ``OUTPUT_VAR <OutputVar>``
-#   Set the variable ``<OutputVar>`` in the parent scope to the path to the
+# ``OUTPUT_VARIABLE <OutputVariable>``
+#   Set the variable ``<OutputVariable>`` in the parent scope to the path to the
 #   generated source file.  By default, ``<Name>`` is used as the output
 #   variable name.
 #
 # Defined variables:
 #
-# ``<OutputVar>``
+# ``<OutputVariable>``
 #   The path of the generated source file.
 #
 # Usage example:
@@ -48,7 +48,7 @@
 #   find_package(Cython)
 #
 #   Cython_compile_pyx(_hello.pyx
-#     OUTPUT_VAR _hello_source_files
+#     OUTPUT_VARIABLE _hello_source_files
 #   )
 #
 #   Python_add_library(_hello
@@ -221,7 +221,7 @@ function(add_cython_target _name)
     TARGET_LANGUAGE ${_target_language}
     LANGUAGE_LEVEL ${_language_level}
     CYTHON_ARGS ${_cython_args}
-    OUTPUT_VAR ${_args_OUTPUT_VAR}
+    OUTPUT_VARIABLE ${_args_OUTPUT_VAR}
     ${_source_file}
     )
 
@@ -232,7 +232,7 @@ endfunction()
 
 function(Cython_compile_pyx)
   set(_options )
-  set(_one_value LANGUAGE_LEVEL TARGET_LANGUAGE OUTPUT_VAR)
+  set(_one_value LANGUAGE_LEVEL TARGET_LANGUAGE OUTPUT_VARIABLE)
   set(_multi_value CYTHON_ARGS)
 
   cmake_parse_arguments(_args
@@ -324,9 +324,9 @@ function(Cython_compile_pyx)
     list(APPEND generated_files ${generated_file})
   endforeach()
 
-  if(_args_OUTPUT_VAR)
-    set(_output_var ${_args_OUTPUT_VAR})
-    set(${_output_var} ${generated_files} PARENT_SCOPE)
+  if(_args_OUTPUT_VARIABLE)
+    set(_output_variable ${_args_OUTPUT_VARIABLE})
+    set(${_output_variable} ${generated_files} PARENT_SCOPE)
   endif()
 
 endfunction()

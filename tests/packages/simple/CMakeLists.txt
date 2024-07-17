@@ -7,7 +7,7 @@ find_package(
   REQUIRED)
 find_package(Cython MODULE REQUIRED VERSION 3.0)
 
-cython_compile_pyx(simple.pyx TARGET_LANGUAGE C OUTPUT_VAR simple_c)
+cython_compile_pyx(simple.pyx TARGET_LANGUAGE C OUTPUT_VARIABLE simple_c)
 
 python_add_library(simple MODULE "${simple_c}" WITH_SOABI)
 
