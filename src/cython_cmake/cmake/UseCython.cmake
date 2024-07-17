@@ -7,7 +7,7 @@
 # Create custom rules to generate the source code for a Python extension module
 # using cython.
 #
-#   Cython_compile_pyx(<pyx_file1> [<pyx_file2> ...]
+#   Cython_compile_pyx(<pyx_file>
 #                     [LANGUAGE C | CXX]
 #                     [CYTHON_ARGS <args> ...]
 #                     [OUTPUT_VARIABLE <OutputVariable>])
@@ -97,8 +97,12 @@ function(Cython_compile_pyx)
     set(_args_CYTHON_ARGS "${CYTHON_ARGS}")
   endif()
 
-  # Get source file location
+  # Get input
   set(_source_files ${_args_UNPARSED_ARGUMENTS})
+  list(LENGTH _source_files input_length)
+  if(NOT input_length EQUAL 1)
+    message(FATAL_ERROR "One and only one input file must be specified, got '${_source_files}'")
+  endif()
 
   # Set target language
   get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
@@ -151,13 +155,12 @@ function(Cython_compile_pyx)
       OUTPUT ${generated_file}
       COMMAND
         ${_cython_command}
-      ARGS
         ${_language_arg}
         ${_args_CYTHON_ARGS}
         ${_depfile_arg}
         ${pyx_location}
         --output-file ${generated_file}
-      DEPENDS
+      MAIN_DEPENDENCY
         ${_source_file}
       DEPFILE
         ${_depfile}
