@@ -125,10 +125,15 @@ function(Cython_compile_pyx)
     set(_depfile ${generated_file}.dep)
     set(_depfile_arg "-M")
 
+    # Normalize the input path
+    get_filename_component(_source_file "${_source_file}" ABSOLUTE)
+
+    # Pretty-printed output names
     file(RELATIVE_PATH generated_file_relative
         ${CMAKE_BINARY_DIR} ${generated_file})
-
-    set(comment "Generating ${_language} source ${generated_file_relative}")
+    file(RELATIVE_PATH source_file_relative
+        ${CMAKE_SOURCE_DIR} ${_source_file})
+    set(comment "Generating ${_language} source '${generated_file_relative}' from '${source_file_relative}'")
 
     get_source_file_property(pyx_location ${_source_file} LOCATION)
 
