@@ -109,31 +109,15 @@ function(Cython_compile_pyx)
     message(FATAL_ERROR "One and only one input file must be specified, got '${_source_files}'")
   endif()
 
-  # Set target language
-  get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
-  set(_language ${_args_LANGUAGE})
-  if(NOT _language)
-    if("C" IN_LIST _languages)
-      set(_language "C")
-    elseif("CXX" IN_LIST _languages)
-      set(_language "CXX")
+  function(_compile_pyx _source_file generated_file language)
+
+    if(language STREQUAL "C")
+      set(_language_arg "")
+    elseif(language STREQUAL "CXX")
+      set(_language_arg "--cplus")
+    else()
+      message(FATAL_ERROR "_compile_pyx language must be one of C or CXX")
     endif()
-  else()
-    if(NOT _language MATCHES "^(C|CXX)$")
-      message(FATAL_ERROR "LANGUAGE must be one of C or CXX")
-    endif()
-  endif()
-
-  set(_language_C_arg "")
-  set(_language_C_extension "c")
-  set(_language_CXX_arg "--cplus")
-  set(_language_CXX_extension "cxx")
-
-  set(_language_arg ${_language_${_language}_arg})
-  set(_language_extension ${_language_${_language}_extension})
-
-  function(_compile_pyx _source_file generated_file)
-
 
     set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
 
@@ -168,7 +152,15 @@ function(Cython_compile_pyx)
     )
   endfunction()
 
-  function(_set_output _input_file _output_var)
+  function(_set_output _input_file _language _output_var)
+    if(_language STREQUAL "C")
+      set(_language_extension "c")
+    elseif(_language STREQUAL "CXX")
+      set(_language_extension "cxx")
+    else()
+      message(FATAL_ERROR "_set_output language must be one of C or CXX")
+    endif()
+
     # Can use cmake_path for CMake 3.20+
     # cmake_path(GET _input_file STEM basename)
     get_filename_component(_basename "${_input_file}" NAME_WE)
@@ -180,15 +172,34 @@ function(Cython_compile_pyx)
 
   list(GET _source_files 0 _source_file)
 
+  # Set target language
+  set(_language ${_args_LANGUAGE})
+  if(NOT _language)
+    get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+    if("C" IN_LIST _languages)
+      # If only C is enabled globally, assume C
+      set(_language "C")
+    elseif("CXX" IN_LIST _languages)
+      # Likewise for CXX
+      set(_language "CXX")
+    else()
+      message(FATAL_ERROR "LANGUAGE keyword required if neither C nor CXX enabled globally")
+    endif()
+  else()
+    if(NOT _language MATCHES "^(C|CXX)$")
+      message(FATAL_ERROR "cython_compile_pyx LANGUAGE must be one of C or CXX")
+    endif()
+  endif()
+
   # Place the cython files in the current binary dir if no path given
   if(NOT _args_OUTPUT)
-    _set_output(${_source_file} _args_OUTPUT)
+    _set_output(${_source_file} ${_language} _args_OUTPUT)
   elseif(NOT IS_ABSOLUTE ${_args_OUTPUT})
     set(_args_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_args_OUTPUT}")
   endif()
 
   set(generated_file ${_args_OUTPUT})
-  _compile_pyx(${_source_file} ${generated_file})
+  _compile_pyx(${_source_file} ${generated_file} ${_language})
   list(APPEND generated_files ${generated_file})
 
   # Output variable only if set
