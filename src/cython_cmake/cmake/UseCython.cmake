@@ -71,7 +71,7 @@
 #=============================================================================
 
 if(CMAKE_VERSION VERSION_LESS "3.7")
-  message(SEND_ERROR "CMake 3.7 required for DEPFILE")
+  message(FATAL_ERROR "CMake 3.7 required for DEPFILE")
 endif()
 
 function(Cython_compile_pyx)
