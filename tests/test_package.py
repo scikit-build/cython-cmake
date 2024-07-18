@@ -71,3 +71,59 @@ def test_output_argument(monkeypatch, tmp_path, output_arg):
     build_files = {x.name for x in build_dir.iterdir()}
     assert f"{generated_file}.dep" in build_files
     assert generated_file in build_files
+
+
+def test_implicit_cxx(monkeypatch, tmp_path):
+    package_dir = tmp_path / "pkg3"
+    shutil.copytree(DIR / "packages/simple", package_dir)
+    monkeypatch.chdir(package_dir)
+
+    cmakelists = Path("CMakeLists.txt")
+    txt = (
+        cmakelists.read_text()
+        .replace("LANGUAGE C", "")
+        .replace("LANGUAGES C", "LANGUAGES CXX")
+    )
+    cmakelists.write_text(txt)
+
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": "build", "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in Path("build").iterdir()}
+    assert "simple.cxx.dep" in build_files
+    assert "simple.cxx" in build_files
+
+
+def test_directive_cxx(monkeypatch, tmp_path):
+    package_dir = tmp_path / "pkg4"
+    shutil.copytree(DIR / "packages/simple", package_dir)
+    monkeypatch.chdir(package_dir)
+
+    cmakelists = Path("CMakeLists.txt")
+    txt = (
+        cmakelists.read_text()
+        .replace("LANGUAGE C", "")
+        .replace("LANGUAGES C", "LANGUAGES CXX")
+    )
+    cmakelists.write_text(txt)
+
+    simple = Path("simple.pyx")
+    txt = simple.read_text()
+    simple.write_text(f"# distutils: language=c++\n{txt}")
+
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": "build", "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in Path("build").iterdir()}
+    assert "simple.cxx.dep" in build_files
+    assert "simple.cxx" in build_files
