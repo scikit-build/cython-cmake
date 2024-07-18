@@ -10,6 +10,7 @@
 #   Cython_compile_pyx(<pyx_file>
 #                     [LANGUAGE C | CXX]
 #                     [CYTHON_ARGS <args> ...]
+#                     [OUTPUT <OutputFile>]
 #                     [OUTPUT_VARIABLE <OutputVariable>])
 #
 # Options:
@@ -23,10 +24,14 @@
 #   Specify additional arguments for the cythonization process. Will default to
 #   the ``CYTHON_ARGS`` variable if not specified.
 #
+# ``OUTPUT <OutputFile>``
+#   Specify a specific path for the output file as ``<OutputFile>``. By
+#   default, this will output into the current binary dir. A depfile will be
+#   created alongside this file as well.
+#
 # ``OUTPUT_VARIABLE <OutputVariable>``
 #   Set the variable ``<OutputVariable>`` in the parent scope to the path to the
-#   generated source file.  By default, ``<Name>`` is used as the output
-#   variable name.
+#   generated source file.
 #
 # Defined variables:
 #
@@ -72,7 +77,7 @@ endif()
 
 function(Cython_compile_pyx)
   set(_options )
-  set(_one_value LANGUAGE OUTPUT_VARIABLE)
+  set(_one_value LANGUAGE OUTPUT OUTPUT_VARIABLE)
   set(_multi_value CYTHON_ARGS)
 
   cmake_parse_arguments(_args
@@ -174,7 +179,15 @@ function(Cython_compile_pyx)
   set(generated_files)
 
   list(GET _source_files 0 _source_file)
-  _set_output(${_source_file} generated_file)
+
+  # Place the cython files in the current binary dir if no path given
+  if(NOT _args_OUTPUT)
+    _set_output(${_source_file} _args_OUTPUT)
+  elseif(NOT IS_ABSOLUTE ${_args_OUTPUT})
+    set(_args_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_args_OUTPUT}")
+  endif()
+
+  set(generated_file ${_args_OUTPUT})
   _compile_pyx(${_source_file} ${generated_file})
   list(APPEND generated_files ${generated_file})
 
