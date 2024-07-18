@@ -127,15 +127,9 @@ function(Cython_compile_pyx)
   set(_language_arg ${_language_${_language}_arg})
   set(_language_extension ${_language_${_language}_extension})
 
-  set(generated_files)
+  function(_compile_pyx _source_file generated_file)
 
-  foreach(_source_file IN LISTS _source_files)
 
-    # Can use cmake_path for CMake 3.20+
-    # cmake_path(GET _source_file STEM _name)
-    get_filename_component(_name "${_source_file}" NAME_WE)
-
-    set(generated_file "${CMAKE_CURRENT_BINARY_DIR}/${_name}.${_language_extension}")
     set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
 
     # Generated depfile is expected to have the ".dep" extension and be located along
@@ -167,9 +161,24 @@ function(Cython_compile_pyx)
       VERBATIM
       COMMENT ${comment}
     )
-    list(APPEND generated_files ${generated_file})
-  endforeach()
+  endfunction()
 
+  function(_set_output _input_file _output_var)
+    # Can use cmake_path for CMake 3.20+
+    # cmake_path(GET _input_file STEM basename)
+    get_filename_component(_basename "${_input_file}" NAME_WE)
+
+    set(${_output_var} "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.${_language_extension}" PARENT_SCOPE)
+  endfunction()
+
+  set(generated_files)
+
+  list(GET _source_files 0 _source_file)
+  _set_output(${_source_file} generated_file)
+  _compile_pyx(${_source_file} ${generated_file})
+  list(APPEND generated_files ${generated_file})
+
+  # Output variable only if set
   if(_args_OUTPUT_VARIABLE)
     set(_output_variable ${_args_OUTPUT_VARIABLE})
     set(${_output_variable} ${generated_files} PARENT_SCOPE)
