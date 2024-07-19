@@ -135,11 +135,16 @@ function(Cython_compile_pyx)
         ${CMAKE_SOURCE_DIR} ${_source_file})
     set(comment "Generating ${_language} source '${generated_file_relative}' from '${source_file_relative}'")
 
+    # Get output directory to ensure its exists
+    get_filename_component(output_directory "${generated_file}" DIRECTORY)
+
     get_source_file_property(pyx_location ${_source_file} LOCATION)
 
     # Add the command to run the compiler.
     add_custom_command(
       OUTPUT ${generated_file}
+      COMMAND
+        ${CMAKE_COMMAND} -E make_directory ${output_directory}
       COMMAND
         ${_cython_command}
         ${_language_arg}
@@ -169,7 +174,19 @@ function(Cython_compile_pyx)
     # cmake_path(GET _input_file STEM basename)
     get_filename_component(_basename "${_input_file}" NAME_WE)
 
-    set(${_output_var} "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.${_language_extension}" PARENT_SCOPE)
+    if(IS_ABSOLUTE ${_input_file})
+      file(RELATIVE_PATH _input_relative ${CMAKE_CURRENT_SOURCE_DIR} ${_input_file})
+    else()
+      set(_input_relative ${_input_file})
+    endif()
+
+    get_filename_component(_output_relative_dir "${_input_relative}" DIRECTORY)
+    string(REPLACE "." "_" _output_relative_dir "${_output_relative_dir}")
+    if(_output_relative_dir)
+      set(_output_relative_dir "${_output_relative_dir}/")
+    endif()
+
+    set(${_output_var} "${CMAKE_CURRENT_BINARY_DIR}/${_output_relative_dir}${_basename}.${_language_extension}" PARENT_SCOPE)
   endfunction()
 
   set(generated_files)
