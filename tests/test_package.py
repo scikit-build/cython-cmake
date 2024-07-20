@@ -50,7 +50,7 @@ def test_output_argument(monkeypatch, tmp_path, output_arg):
 
     cmakelists = Path("CMakeLists.txt")
     txt = cmakelists.read_text().replace(
-        "# OUTPUT_ARG", f'OUTPUT "{output_values[output_arg]}"'
+        "# PLACEHOLDER", f'OUTPUT "{output_values[output_arg]}"'
     )
     cmakelists.write_text(txt)
 
@@ -133,6 +133,7 @@ def test_multiple_packages(monkeypatch, tmp_path):
     package_dir = tmp_path / "pkg5"
     shutil.copytree(DIR / "packages/multiple_packages", package_dir)
     monkeypatch.chdir(package_dir)
+
     build_dir = tmp_path / "build"
 
     wheel = build_wheel(
@@ -158,3 +159,39 @@ def test_multiple_packages(monkeypatch, tmp_path):
     package3_build_files = {x.name for x in (build_dir / "__").iterdir()}
     assert "module.c.dep" in package3_build_files
     assert "module.c" in package3_build_files
+
+
+def test_genex_cython_args(monkeypatch, tmp_path, capfd):
+    package_dir = tmp_path / "pkg6"
+    shutil.copytree(DIR / "packages/simple", package_dir)
+    monkeypatch.chdir(package_dir)
+
+    build_dir = tmp_path / "build"
+
+    cmakelists = Path("CMakeLists.txt")
+    txt = (
+        cmakelists.read_text()
+        .replace("LANGUAGE C", "")
+        .replace("LANGUAGES C", "LANGUAGES CXX")
+        .replace("# PLACEHOLDER", 'CYTHON_ARGS "$<1:--verbose;--annotate>"')
+    )
+    cmakelists.write_text(txt)
+
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in build_dir.iterdir()}
+    assert "simple.cxx.dep" in build_files
+    assert "simple.cxx" in build_files
+
+    # Check side-effect of "--annotate"
+    assert "simple.html" in build_files
+
+    # Check side-effect of "--verbose"
+    captured = capfd.readouterr()
+    assert "Compiling " in captured.out or "Compiling " in captured.err

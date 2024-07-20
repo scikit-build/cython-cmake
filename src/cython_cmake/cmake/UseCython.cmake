@@ -70,8 +70,10 @@
 # limitations under the License.
 #=============================================================================
 
-if(CMAKE_VERSION VERSION_LESS "3.7")
-  message(FATAL_ERROR "CMake 3.7 required for DEPFILE")
+if(CMAKE_VERSION VERSION_LESS "3.8")
+  # CMake 3.7 required for DEPFILE
+  # CMake 3.8 required for COMMAND_EXPAND_LISTS
+  message(FATAL_ERROR "CMake 3.8 required for COMMAND_EXPAND_LISTS")
 endif()
 
 function(Cython_compile_pyx)
@@ -148,10 +150,11 @@ function(Cython_compile_pyx)
       COMMAND
         ${_cython_command}
         ${_language_arg}
-        ${_args_CYTHON_ARGS}
+        "${_args_CYTHON_ARGS}"
         ${_depfile_arg}
         ${pyx_location}
         --output-file ${generated_file}
+      COMMAND_EXPAND_LISTS
       MAIN_DEPENDENCY
         ${_source_file}
       DEPFILE
