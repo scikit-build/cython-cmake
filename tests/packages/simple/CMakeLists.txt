@@ -8,7 +8,7 @@ find_package(
 find_package(Cython MODULE REQUIRED VERSION 3.0)
 include(UseCython)
 
-cython_compile_pyx(simple.pyx
+cython_transpile(simple.pyx
   LANGUAGE C
   # PLACEHOLDER
   OUTPUT_VARIABLE simple_c
