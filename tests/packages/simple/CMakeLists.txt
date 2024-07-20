@@ -10,7 +10,7 @@ include(UseCython)
 
 cython_compile_pyx(simple.pyx
   LANGUAGE C
-  # OUTPUT_ARG
+  # PLACEHOLDER
   OUTPUT_VARIABLE simple_c
 )
 
