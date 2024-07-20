@@ -2,16 +2,16 @@
 #
 # The following functions are defined:
 #
-# .. cmake:command:: Cython_compile_pyx
+# .. cmake:command:: Cython_transpile
 #
 # Create custom rules to generate the source code for a Python extension module
 # using cython.
 #
-#   Cython_compile_pyx(<pyx_file>
-#                     [LANGUAGE C | CXX]
-#                     [CYTHON_ARGS <args> ...]
-#                     [OUTPUT <OutputFile>]
-#                     [OUTPUT_VARIABLE <OutputVariable>])
+#   Cython_transpile(<pyx_file>
+#                   [LANGUAGE C | CXX]
+#                   [CYTHON_ARGS <args> ...]
+#                   [OUTPUT <OutputFile>]
+#                   [OUTPUT_VARIABLE <OutputVariable>])
 #
 # Options:
 #
@@ -44,7 +44,7 @@
 #   find_package(Cython)
 #   include(UseCython)
 #
-#   Cython_compile_pyx(_hello.pyx
+#   Cython_transpile(_hello.pyx
 #     OUTPUT_VARIABLE _hello_source_files
 #   )
 #
@@ -76,7 +76,7 @@ if(CMAKE_VERSION VERSION_LESS "3.8")
   message(FATAL_ERROR "CMake 3.8 required for COMMAND_EXPAND_LISTS")
 endif()
 
-function(Cython_compile_pyx)
+function(Cython_transpile)
   set(_options )
   set(_one_value LANGUAGE OUTPUT OUTPUT_VARIABLE)
   set(_multi_value CYTHON_ARGS)
@@ -110,14 +110,14 @@ function(Cython_compile_pyx)
     message(FATAL_ERROR "One and only one input file must be specified, got '${_source_files}'")
   endif()
 
-  function(_compile_pyx _source_file generated_file language)
+  function(_transpile _source_file generated_file language)
 
     if(language STREQUAL "C")
       set(_language_arg "")
     elseif(language STREQUAL "CXX")
       set(_language_arg "--cplus")
     else()
-      message(FATAL_ERROR "_compile_pyx language must be one of C or CXX")
+      message(FATAL_ERROR "_transpile language must be one of C or CXX")
     endif()
 
     set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
@@ -215,7 +215,7 @@ function(Cython_compile_pyx)
   endif()
 
   if(NOT _language MATCHES "^(C|CXX)$")
-    message(FATAL_ERROR "cython_compile_pyx LANGUAGE must be one of C or CXX")
+    message(FATAL_ERROR "Cython_transpile LANGUAGE must be one of C or CXX")
   endif()
 
   # Place the cython files in the current binary dir if no path given
@@ -226,7 +226,7 @@ function(Cython_compile_pyx)
   endif()
 
   set(generated_file ${_args_OUTPUT})
-  _compile_pyx(${_source_file} ${generated_file} ${_language})
+  _transpile(${_source_file} ${generated_file} ${_language})
   list(APPEND generated_files ${generated_file})
 
   # Output variable only if set

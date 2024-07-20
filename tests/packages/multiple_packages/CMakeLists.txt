@@ -10,7 +10,7 @@ include(UseCython)
 
 #-----------------------------------------------------------------------------
 # package1.module
-cython_compile_pyx(package1/module.pyx
+cython_transpile(package1/module.pyx
   LANGUAGE C
   OUTPUT_VARIABLE module_c
 )
@@ -21,7 +21,7 @@ install(TARGETS module1 DESTINATION "package1")
 
 #-----------------------------------------------------------------------------
 # package1.package2.module
-cython_compile_pyx(package1/package2/module.pyx
+cython_transpile(package1/package2/module.pyx
   LANGUAGE C
   OUTPUT_VARIABLE module_c
 )
@@ -35,7 +35,7 @@ install(TARGETS module2 DESTINATION "package1/package2")
 
 file(COPY package1/package2/module.pyx DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-cython_compile_pyx(${CMAKE_CURRENT_SOURCE_DIR}/../module.pyx
+cython_transpile(${CMAKE_CURRENT_SOURCE_DIR}/../module.pyx
   LANGUAGE C
   CYTHON_ARGS
     --module-name "package1.package3.module"
