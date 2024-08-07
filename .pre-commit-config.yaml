@@ -56,6 +56,7 @@ repos:
         additional_dependencies:
           - pytest
           - scikit-build-core
+          - importlib-resources
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.3.0"

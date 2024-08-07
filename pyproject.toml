@@ -30,10 +30,15 @@ classifiers = [
   "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+  "importlib_resources; python_version<'3.9'"
+]
 
 [project.entry-points."cmake.module"]
 any = "cython_cmake.cmake"
+
+[project.scripts]
+cython-cmake = "cython_cmake.__main__:main"
 
 [project.optional-dependencies]
 test = [
@@ -152,7 +157,9 @@ similarities.ignore-imports = "yes"
 messages_control.disable = [
   "design",
   "fixme",
+  "invalid-name",
   "line-too-long",
+  "missing-class-docstring",
   "missing-module-docstring",
   "wrong-import-position",
 ]
