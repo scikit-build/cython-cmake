@@ -9,5 +9,6 @@ project(${SKBUILD_PROJECT_NAME} LANGUAGES C Cython)
 
 python_add_library(simple MODULE WITH_SOABI)
 target_sources(simple PRIVATE simple.pyx)
+target_link_libraries(simple PRIVATE Python::Module)
 
 install(TARGETS simple DESTINATION .)
