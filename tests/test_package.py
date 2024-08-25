@@ -34,6 +34,23 @@ def test_simple(monkeypatch, tmp_path):
     assert "simple.c" in build_files
 
 
+def test_simple_language(monkeypatch, tmp_path):
+    monkeypatch.chdir(DIR / "packages/simple_language")
+    build_dir = tmp_path / "build"
+
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in build_dir.iterdir()}
+    assert "simple.c.dep" in build_files
+    assert "simple.c" in build_files
+
+
 @pytest.mark.parametrize("output_arg", ["empty", "relative", "absolute"])
 def test_output_argument(monkeypatch, tmp_path, output_arg):
     package_dir = tmp_path / "pkg2"

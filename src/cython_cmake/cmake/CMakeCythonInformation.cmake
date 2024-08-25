@@ -1,0 +1,28 @@
+message(WARNING "Entering CMakeCythonInformation.cmake")
+
+#set(CMAKE_Cython_CREATE_SHARED_LIBRARY)
+#set(CMAKE_Cython_CREATE_SHARED_MODULE)
+#set(CMAKE_Cython_CREATE_STATIC_LIBRARY)
+#set(CMAKE_Cython_COMPILE_OBJECT)
+#set(CMAKE_Cython_LINK_EXECUTABLE)
+
+if(NOT CMAKE_Cython_COMPILE_OBJECT)
+    ## Typical definition
+#    set(CMAKE_Cython_COMPILE_OBJECT
+#            "<CMAKE_Cython_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -c <SOURCE> -o <OBJECT>")
+    ## Approach 1
+#    set(CMAKE_Cython_COMPILE_OBJECT
+#            "<CMAKE_Cython_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
+    ## Approach 2
+    string(REPLACE "<SOURCE>" "<OBJECT>.c" CMAKE_C_COMPILE_OBJECT_replaced "${CMAKE_C_COMPILE_OBJECT}")
+    set(CMAKE_Cython_COMPILE_OBJECT
+            "<CMAKE_Cython_COMPILER> <FLAGS> -o <OBJECT>.c <SOURCE>"
+            "${CMAKE_C_COMPILE_OBJECT_replaced}"
+    )
+endif()
+
+set(CMAKE_Cython_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
+set(CMAKE_Cython_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
+set(CMAKE_Cython_LINK_EXECUTABLE ${CMAKE_C_LINK_EXECUTABLE})
+
+set(CMAKE_Cython_INFORMATION_LOADED 1)
