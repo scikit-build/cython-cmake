@@ -15,6 +15,74 @@
 
 <!-- SPHINX-START -->
 
+
+This provides helpers for using Cython. Use:
+
+```cmake
+find_package(Cython MODULE REQUIRED VERSION 3.0)
+include(UseCython)
+```
+
+If you find Python beforehand, the search will take this into account. You can
+specify a version range on CMake 3.19+. This will define a `Cython::Cython`
+target (along with a matching `CYTHON_EXECUTABLE` variable). It will also
+provide the following helper function:
+
+```cmake
+cython_transpile(<pyx_file>
+                 [LANGUAGE C | CXX]
+                 [CYTHON_ARGS <args> ...]
+                 [OUTPUT <OutputFile>]
+                 [OUTPUT_VARIABLE <OutputVariable>]
+                 )
+```
+
+This function takes a pyx file and makes a matching `.c` / `.cxx` file in the
+current binary directory (exact path can be specified with `OUTPUT`). The
+location of the produced file is placed in the variable specified by
+`OUTPUT_VARIABLE` if given. Extra arguments to the Cython executable can be
+given with `CYTHON_ARGS`, and if this is not set, it will take a default from a
+`CYTHON_ARGS` variable.
+
+If the `LANGUAGE` is not given, and both `C` and `CXX` are enabled globally,
+then the language will try to be deduced from a `# distutils: language=...`
+comment in the source file, and C will be used if not found.
+
+This utility relies on the `DEPFILE` feature introduced for Ninja in CMake 3.7,
+and added for Make in CMake 3.20, and Visual Studio & Xcode in CMake 3.21.
+
+## Example
+
+```cmake
+find_package(
+  Python
+  COMPONENTS Interpreter Development.Module
+  REQUIRED)
+find_package(Cython MODULE REQUIRED)
+
+cython_transpile(simple.pyx LANGUAGE C OUTPUT_VARIABLE simple_c)
+
+python_add_library(simple MODULE "${simple_c}" WITH_SOABI)
+```
+
+## scikit-build-core
+
+To use this package with scikit-build-core, you need to include it in your build
+requirements:
+
+```toml
+[build-system]
+requires = ["scikit-build-core", "cython", "cython-cmake"]
+build-backend = "scikit_build_core.build"
+```
+
+It is also recommended to require CMake 3.21:
+
+```toml
+[tool.scikit-build]
+cmake.version = ">=3.21"
+```
+
 ## Vendoring
 
 You can vendor FindCython and/or UseCython into your package, as well. This
