@@ -15,7 +15,6 @@
 
 <!-- SPHINX-START -->
 
-
 This provides helpers for using Cython. Use:
 
 ```cmake
