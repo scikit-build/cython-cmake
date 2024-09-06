@@ -70,6 +70,8 @@
 # limitations under the License.
 #=============================================================================
 
+# SPDX-License-Identifier: Apache-2.0
+
 if(CMAKE_VERSION VERSION_LESS "3.8")
   # CMake 3.7 required for DEPFILE
   # CMake 3.8 required for COMMAND_EXPAND_LISTS

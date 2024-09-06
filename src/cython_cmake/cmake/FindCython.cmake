@@ -41,6 +41,8 @@
 # limitations under the License.
 #=============================================================================
 
+# SPDX-License-Identifier: Apache-2.0
+
 # Use the Cython executable that lives next to the Python executable
 # if it is a local installation.
 if(Python_EXECUTABLE)
