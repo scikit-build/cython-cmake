@@ -49,7 +49,7 @@
 #   )
 #
 #   Python_add_library(_hello
-#     MODULE ${_hello_source_files}
+#     MODULE "${_hello_source_files}"
 #     WITH_SOABI
 #   )
 #
@@ -134,9 +134,9 @@ function(Cython_transpile)
 
     # Pretty-printed output names
     file(RELATIVE_PATH generated_file_relative
-        ${CMAKE_BINARY_DIR} ${generated_file})
+        "${CMAKE_BINARY_DIR}" "${generated_file}")
     file(RELATIVE_PATH source_file_relative
-        ${CMAKE_SOURCE_DIR} ${_source_file})
+        "${CMAKE_SOURCE_DIR}" "${_source_file}")
     set(comment "Generating ${_language} source '${generated_file_relative}' from '${source_file_relative}'")
 
     # Get output directory to ensure its exists
@@ -146,23 +146,23 @@ function(Cython_transpile)
 
     # Add the command to run the compiler.
     add_custom_command(
-      OUTPUT ${generated_file}
+      OUTPUT "${generated_file}"
       COMMAND
-        ${CMAKE_COMMAND} -E make_directory ${output_directory}
+        "${CMAKE_COMMAND}" -E make_directory "${output_directory}"
       COMMAND
         ${_cython_command}
         ${_language_arg}
         "${_args_CYTHON_ARGS}"
         ${_depfile_arg}
-        ${pyx_location}
-        --output-file ${generated_file}
+        "${pyx_location}"
+        --output-file "${generated_file}"
       COMMAND_EXPAND_LISTS
       MAIN_DEPENDENCY
-        ${_source_file}
+        "${_source_file}"
       DEPFILE
-        ${_depfile}
+        "${_depfile}"
       VERBATIM
-      COMMENT ${comment}
+      COMMENT "${comment}"
     )
   endfunction()
 
@@ -179,10 +179,10 @@ function(Cython_transpile)
     # cmake_path(GET _input_file STEM basename)
     get_filename_component(_basename "${_input_file}" NAME_WE)
 
-    if(IS_ABSOLUTE ${_input_file})
-      file(RELATIVE_PATH _input_relative ${CMAKE_CURRENT_SOURCE_DIR} ${_input_file})
+    if(IS_ABSOLUTE "${_input_file}")
+      file(RELATIVE_PATH _input_relative "${CMAKE_CURRENT_SOURCE_DIR}" "${_input_file}")
     else()
-      set(_input_relative ${_input_file})
+      set(_input_relative "${_input_file}")
     endif()
 
     get_filename_component(_output_relative_dir "${_input_relative}" DIRECTORY)
@@ -222,19 +222,19 @@ function(Cython_transpile)
 
   # Place the cython files in the current binary dir if no path given
   if(NOT _args_OUTPUT)
-    _set_output(${_source_file} ${_language} _args_OUTPUT)
-  elseif(NOT IS_ABSOLUTE ${_args_OUTPUT})
+    _set_output("${_source_file}" ${_language} _args_OUTPUT)
+  elseif(NOT IS_ABSOLUTE "${_args_OUTPUT}")
     set(_args_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_args_OUTPUT}")
   endif()
 
-  set(generated_file ${_args_OUTPUT})
-  _transpile(${_source_file} ${generated_file} ${_language})
-  list(APPEND generated_files ${generated_file})
+  set(generated_file "${_args_OUTPUT}")
+  _transpile("${_source_file}" "${generated_file}" ${_language})
+  list(APPEND generated_files "${generated_file}")
 
   # Output variable only if set
   if(_args_OUTPUT_VARIABLE)
     set(_output_variable ${_args_OUTPUT_VARIABLE})
-    set(${_output_variable} ${generated_files} PARENT_SCOPE)
+    set(${_output_variable} "${generated_files}" PARENT_SCOPE)
   endif()
 
 endfunction()
