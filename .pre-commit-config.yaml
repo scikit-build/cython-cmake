@@ -41,7 +41,7 @@ repos:
         args: [--prose-wrap=always]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.6.4"
+    rev: "v0.6.8"
     hooks:
       - id: ruff
         args: ["--fix", "--show-fixes"]
@@ -82,12 +82,12 @@ repos:
         exclude: .pre-commit-config.yaml
 
   - repo: https://github.com/henryiii/validate-pyproject-schema-store
-    rev: "2024.08.26"
+    rev: "2024.09.23"
     hooks:
       - id: validate-pyproject
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.29.2"
+    rev: "0.29.3"
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
