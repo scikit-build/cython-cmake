@@ -10,8 +10,8 @@ files_to_sync:
   - .packit.yaml
 
 upstream_package_name: cython-cmake
-specfile_path: .distro/python-cython-cmake.spec
-downstream_package_name: python-cython-cmake
+specfile_path: .distro/cython-cmake.spec
+downstream_package_name: cython-cmake
 upstream_tag_template: v{version}
 
 targets: &targets
