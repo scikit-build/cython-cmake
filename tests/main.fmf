@@ -1,0 +1,4 @@
+path: /
+test: ./tests/test_pure_cmake.sh
+framework: beakerlib
+tag: [ cmake ]

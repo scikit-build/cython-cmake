@@ -1,0 +1,12 @@
+summary: Test CMake only modules
+discover+:
+  how: fmf
+  filter: "tag: cmake"
+prepare:
+  - name: Install additional test packages
+    how: install
+    package:
+      - gcc
+      - g++
+execute:
+  how: tmt

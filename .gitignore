@@ -156,3 +156,8 @@ Thumbs.db
 # Common editor files
 *~
 *.swp
+
+# Fedora packaging
+*.rpm
+*.tar.gz
+!.distro/*.spec
