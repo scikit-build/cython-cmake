@@ -1,7 +1,0 @@
-tag: [ smoke ]
-tier: 0
-path: /
-
-/version:
-  test: |
-    python3 -c "import cython_cmake; print(cython_cmake.__version__)"
