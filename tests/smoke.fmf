@@ -1,0 +1,19 @@
+/:
+  inherit: false
+
+tag: [ smoke ]
+tier: 0
+path: /
+
+/python-version:
+  test: |
+    python3 -c "import cython_cmake; print(cython_cmake.__version__)"
+
+/cmake-modules:
+  # Cannot test for FindCython because it uses `add_executable`
+  test: |
+    cat <<-EOF > test_modules.cmake
+      include(UseCython RESULT_VARIABLE UseCython_PATH)
+      message("UseCython_PATH=\${UseCython_PATH}")
+    EOF
+    cmake -P test_modules.cmake

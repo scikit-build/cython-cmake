@@ -1,3 +1,7 @@
+discover:
+  how: fmf
+  path: .
+
 adjust+:
   # Cannot use initiator: fedora-ci reliably yet
   when: initiator is not defined or initiator != packit
