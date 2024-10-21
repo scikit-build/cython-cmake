@@ -17,8 +17,9 @@ upstream_tag_template: v{version}
 targets: &targets
   - fedora-all-x86_64
   - fedora-all-aarch64
-  - epel-10-x86_64
-  - epel-10-aarch64
+  # TODO: Package for epel-10 once scikit-build-core is packaged there
+#  - epel-10-x86_64
+#  - epel-10-aarch64
 
 jobs:
   - &copr_build
