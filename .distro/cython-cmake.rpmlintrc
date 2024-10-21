@@ -1,0 +1,3 @@
+addFilter("E: devel-dependency python3-devel")
+addFilter("dangling-relative-symlink .*/FindCython\.cmake")
+addFilter("dangling-relative-symlink .*/UseCython\.cmake")
