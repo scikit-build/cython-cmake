@@ -32,6 +32,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+  "cython",
   "importlib_resources; python_version<'3.9'"
 ]
 
@@ -45,7 +46,6 @@ cython-cmake = "cython_cmake.__main__:main"
 test = [
   "pytest >=6",
   "scikit-build-core",
-  "cython",
 ]
 docs = [
   "sphinx>=7.0",
