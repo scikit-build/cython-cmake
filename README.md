@@ -24,8 +24,8 @@ include(UseCython)
 
 If you find Python beforehand, the search will take this into account. You can
 specify a version range on CMake 3.19+. This will define a `Cython::Cython`
-target (along with a matching `CYTHON_EXECUTABLE` variable). It will also
-provide the following helper function:
+target (along with a matching `CYTHON_EXECUTABLE` variable). The UseCython
+module will provide the following helper function:
 
 ```cmake
 cython_transpile(<pyx_file>
@@ -57,11 +57,12 @@ find_package(
   Python
   COMPONENTS Interpreter Development.Module
   REQUIRED)
-find_package(Cython MODULE REQUIRED)
+include(UseCython)
 
 cython_transpile(simple.pyx LANGUAGE C OUTPUT_VARIABLE simple_c)
 
 python_add_library(simple MODULE "${simple_c}" WITH_SOABI)
+install(TARGETS simple DESTINATION .)
 ```
 
 ## scikit-build-core
@@ -75,12 +76,7 @@ requires = ["scikit-build-core", "cython", "cython-cmake"]
 build-backend = "scikit_build_core.build"
 ```
 
-It is also recommended to require CMake 3.21:
-
-```toml
-[tool.scikit-build]
-cmake.version = ">=3.21"
-```
+It is also recommended to require CMake 3.21 or newer in your `CMakeLists.txt`.
 
 ## Vendoring
 
