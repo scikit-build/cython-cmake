@@ -1,0 +1,25 @@
+message(WARNING "Entering CMakeCythonCompiler.cmake")
+
+#set(CMAKE_Cython_COMPILER "@CMAKE_Cython_COMPILER@")
+#set(CMAKE_Cython_COMPILER_ID "@CMAKE_Cython_COMPILER_ID@")
+#set(CMAKE_Cython_COMPILER_VERSION "@CMAKE_Cython_COMPILER_VERSION@")
+
+set(CMAKE_Cython_COMPILER "@CYTHON_EXE@")
+set(CMAKE_Cython_COMPILER_ID "dummy2")
+set(CMAKE_Cython_COMPILER_VERSION "dummy3")
+
+set(CMAKE_Cython_COMPILER_LOADED 1)
+#set(CMAKE_Cython_COMPILER_WORKS "@CMAKE_Cython_COMPILER_WORKS@")
+set(CMAKE_Cython_COMPILER_WORKS 1 CACHE INTERNAL "")
+
+#set(CMAKE_Cython_COMPILER_ID_RUN "@CMAKE_Cython_COMPILER_ID_RUN@")
+set(CMAKE_Cython_COMPILER_ID_RUN "dummy4")
+## Not sure how to ensure the correct order of enable_language so that this works
+#set(CMAKE_INCLUDE_FLAG_Cython "${CMAKE_INCLUDE_FLAG_C}")
+set(CMAKE_INCLUDE_FLAG_Cython "-I")
+## Approach 1
+#set(CMAKE_Cython_OUTPUT_EXTENSION ".c")
+## Approach 2
+set(CMAKE_Cython_OUTPUT_EXTENSION ".o")
+set(CMAKE_Cython_IGNORE_EXTENSIONS "c;o;O;obj;OBJ")
+set(CMAKE_Cython_SOURCE_FILE_EXTENSIONS "pyx;py")
