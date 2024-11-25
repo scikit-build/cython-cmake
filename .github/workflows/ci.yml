@@ -70,7 +70,7 @@ jobs:
       - run: pipx install ninja
         if: matrix.cmake == '3.15.x'
 
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v4
 
       - name: Install package
         run: uv pip install --system -e.[test]
