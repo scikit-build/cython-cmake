@@ -9,7 +9,7 @@ if sys.version_info < (3, 9):
 else:
     from importlib.resources import files
 
-__all__ = ["vendorize", "Members"]
+__all__ = ["Members", "vendorize"]
 
 
 def __dir__() -> list[str]:
