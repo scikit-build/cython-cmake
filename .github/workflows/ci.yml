@@ -72,8 +72,5 @@ jobs:
 
       - uses: astral-sh/setup-uv@v3
 
-      - name: Install package
-        run: uv pip install --system -e.[test]
-
       - name: Test package
-        run: python -m pytest --durations=20
+        run: uv run pytest --durations=20
