@@ -97,7 +97,7 @@ endif()
 
 find_package_handle_standard_args(Cython
   REQUIRED_VARS CYTHON_EXECUTABLE
-  VERSION_VAR ${CYTHON_VERSION}
+  VERSION_VAR CYTHON_VERSION
   ${_handle_version_range}
 )
 
