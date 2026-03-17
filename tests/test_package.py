@@ -13,11 +13,11 @@ import cython_cmake as m
 DIR = Path(__file__).parent.resolve()
 
 
-def test_version():
+def test_version() -> None:
     assert importlib.metadata.version("cython_cmake") == m.__version__
 
 
-def test_simple(monkeypatch, tmp_path):
+def test_simple(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.chdir(DIR / "packages/simple")
     build_dir = tmp_path / "build"
 
@@ -35,7 +35,9 @@ def test_simple(monkeypatch, tmp_path):
 
 
 @pytest.mark.parametrize("output_arg", ["empty", "relative", "absolute"])
-def test_output_argument(monkeypatch, tmp_path, output_arg):
+def test_output_argument(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, output_arg: str
+) -> None:
     package_dir = tmp_path / "pkg2"
     shutil.copytree(DIR / "packages/simple", package_dir)
     monkeypatch.chdir(package_dir)
@@ -73,7 +75,7 @@ def test_output_argument(monkeypatch, tmp_path, output_arg):
     assert generated_file in build_files
 
 
-def test_implicit_cxx(monkeypatch, tmp_path):
+def test_implicit_cxx(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     package_dir = tmp_path / "pkg3"
     shutil.copytree(DIR / "packages/simple", package_dir)
     monkeypatch.chdir(package_dir)
@@ -99,7 +101,7 @@ def test_implicit_cxx(monkeypatch, tmp_path):
     assert "simple.cxx" in build_files
 
 
-def test_directive_cxx(monkeypatch, tmp_path):
+def test_directive_cxx(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     package_dir = tmp_path / "pkg4"
     shutil.copytree(DIR / "packages/simple", package_dir)
     monkeypatch.chdir(package_dir)
@@ -129,7 +131,7 @@ def test_directive_cxx(monkeypatch, tmp_path):
     assert "simple.cxx" in build_files
 
 
-def test_multiple_packages(monkeypatch, tmp_path):
+def test_multiple_packages(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     package_dir = tmp_path / "pkg5"
     shutil.copytree(DIR / "packages/multiple_packages", package_dir)
     monkeypatch.chdir(package_dir)
@@ -161,7 +163,9 @@ def test_multiple_packages(monkeypatch, tmp_path):
     assert "module.c" in package3_build_files
 
 
-def test_genex_cython_args(monkeypatch, tmp_path, capfd):
+def test_genex_cython_args(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capfd: pytest.CaptureFixture[str]
+) -> None:
     package_dir = tmp_path / "pkg6"
     shutil.copytree(DIR / "packages/simple", package_dir)
     monkeypatch.chdir(package_dir)

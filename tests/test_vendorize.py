@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-
-import pytest
+from typing import TYPE_CHECKING
 
 from cython_cmake.__main__ import main
+
+if TYPE_CHECKING:
+    import pytest
 
 DIR = Path(__file__).parent.resolve()
 FIND_CYTHON = DIR.parent.joinpath("src/cython_cmake/cmake/FindCython.cmake").read_text()
