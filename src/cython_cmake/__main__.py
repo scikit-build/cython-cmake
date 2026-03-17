@@ -4,12 +4,14 @@ import argparse
 import enum
 import functools
 import operator
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ._version import version as __version__
 from .vendor import Members, vendorize
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 __all__ = ["main"]
 
