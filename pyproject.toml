@@ -49,13 +49,6 @@ test = [
   "pytest >=6",
   "scikit-build-core",
 ]
-docs = [
-  "sphinx>=7.0",
-  "myst_parser>=0.13",
-  "sphinx_copybutton",
-  "sphinx_autodoc_typehints",
-  "furo>=2023.08.17",
-]
 
 [project.urls]
 Homepage = "https://github.com/scikit-build/cython-cmake"
@@ -164,3 +157,7 @@ messages_control.disable = [
   "missing-module-docstring",
   "wrong-import-position",
 ]
+
+
+[tool.repo-review.ignore]
+PY004 = "All docs in README"
