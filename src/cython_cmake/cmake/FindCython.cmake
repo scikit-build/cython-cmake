@@ -102,7 +102,7 @@ find_package_handle_standard_args(Cython
 )
 
 if(CYTHON_FOUND)
-  if(NOT DEFINED Cython::Cython)
+  if(NOT TARGET Cython::Cython)
     add_executable(Cython::Cython IMPORTED)
     set_target_properties(Cython::Cython PROPERTIES
         IMPORTED_LOCATION "${CYTHON_EXECUTABLE}"
