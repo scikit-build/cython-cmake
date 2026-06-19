@@ -7,8 +7,8 @@ plus a thin Python wrapper. The CMake modules are the actual product; the Python
 package is the delivery mechanism. It is consumed two ways:
 
 1. **As a build dependency** — installed alongside `scikit-build-core`, which
-   adds the package's `cmake/` dir to `CMAKE_MODULE_PATH` via the
-   `cmake.module` entry point (see `pyproject.toml`). User CMake code then does
+   adds the package's `cmake/` dir to `CMAKE_MODULE_PATH` via the `cmake.module`
+   entry point (see `pyproject.toml`). User CMake code then does
    `find_package(Cython)` / `include(UseCython)`.
 2. **Vendored** — `cython-cmake vendor <dir>` copies the `.cmake` files into a
    user's project so they have no build-time dependency on this package.
@@ -24,7 +24,7 @@ package is the delivery mechanism. It is consumed two ways:
     `add_custom_command` to turn a `.pyx` into a `.c`/`.cxx` with a `DEPFILE`.
     Language is taken from `LANGUAGE`, else deduced from a
     `# distutils: language=...` directive, else from which of C/CXX is enabled.
-- `src/cython_cmake/cmake/__init__.py` — empty marker; its package dir *is* the
+- `src/cython_cmake/cmake/__init__.py` — empty marker; its package dir _is_ the
   module path exposed to scikit-build-core.
 - `vendor.py` — `Members` flag enum + `vendorize()`. Copies the `.cmake` files
   out via `importlib.resources`.
@@ -47,7 +47,8 @@ nox -s build                     # build sdist + wheel
 ```
 
 `noxfile.py` is a `uv run --script` self-contained script; `nox` alone runs lint
-+ tests across installed Pythons.
+
+- tests across installed Pythons.
 
 ## Testing notes
 
