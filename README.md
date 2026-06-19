@@ -111,7 +111,5 @@ already exist.
 [pypi-link]:                https://pypi.org/project/cython-cmake/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/cython-cmake
 [pypi-version]:             https://img.shields.io/pypi/v/cython-cmake
-[rtd-badge]:                https://readthedocs.org/projects/cython-cmake/badge/?version=latest
-[rtd-link]:                 https://cython-cmake.readthedocs.io/en/latest/?badge=latest
 
 <!-- prettier-ignore-end -->

@@ -161,3 +161,7 @@ Thumbs.db
 *.rpm
 *.tar.gz
 !.distro/*.spec
+
+# Symlink to AGENTS.md
+CLAUDE.md
+.claude/
