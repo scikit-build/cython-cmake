@@ -145,6 +145,7 @@ function(Cython_transpile)
     get_source_file_property(pyx_location ${_source_file} LOCATION)
 
     # Add the command to run the compiler.
+    # Keep _args_CYTHON_ARGS quoted: a generator expression can contain ';'
     add_custom_command(
       OUTPUT "${generated_file}"
       COMMAND
@@ -152,8 +153,6 @@ function(Cython_transpile)
       COMMAND
         ${_cython_command}
         ${_language_arg}
-        # Keep quoted: a generator expression containing ';' must stay one
-        # argument so it evaluates before COMMAND_EXPAND_LISTS splits the list.
         "${_args_CYTHON_ARGS}"
         ${_depfile_arg}
         "${pyx_location}"
