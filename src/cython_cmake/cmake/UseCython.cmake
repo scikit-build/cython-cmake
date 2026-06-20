@@ -137,7 +137,7 @@ function(Cython_transpile)
         "${CMAKE_BINARY_DIR}" "${generated_file}")
     file(RELATIVE_PATH source_file_relative
         "${CMAKE_SOURCE_DIR}" "${_source_file}")
-    set(comment "Generating ${_language} source '${generated_file_relative}' from '${source_file_relative}'")
+    set(comment "Generating ${language} source '${generated_file_relative}' from '${source_file_relative}'")
 
     # Get output directory to ensure its exists
     get_filename_component(output_directory "${generated_file}" DIRECTORY)
@@ -145,6 +145,7 @@ function(Cython_transpile)
     get_source_file_property(pyx_location ${_source_file} LOCATION)
 
     # Add the command to run the compiler.
+    # Keep _args_CYTHON_ARGS quoted: a generator expression can contain ';'
     add_custom_command(
       OUTPUT "${generated_file}"
       COMMAND
