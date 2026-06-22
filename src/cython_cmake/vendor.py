@@ -35,12 +35,11 @@ def vendorize(
         raise AssertionError(msg)
 
     cmake_dir = files("cython_cmake") / "cmake"
-    if Members.FindCython in members:
-        find = cmake_dir / "FindCython.cmake"
-        find_target = target / "FindCython.cmake"
-        find_target.write_text(find.read_text(encoding="utf-8"), encoding="utf-8")
-
-    if Members.UseCython in members:
-        use = cmake_dir / "UseCython.cmake"
-        use_target = target / "UseCython.cmake"
-        use_target.write_text(use.read_text(encoding="utf-8"), encoding="utf-8")
+    for member in Members:
+        # Member names match the .cmake filenames (FindCython, UseCython).
+        if member in members:
+            filename = f"{member.name}.cmake"
+            source = cmake_dir / filename
+            (target / filename).write_text(
+                source.read_text(encoding="utf-8"), encoding="utf-8"
+            )
