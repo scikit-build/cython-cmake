@@ -81,6 +81,33 @@ def test_simple_language(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
     assert cython_c.is_file()
 
 
+@cython_language
+def test_language_features(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(DIR / "packages/language_features")
+    build_dir = tmp_path / "build"
+
+    # Building at all proves include dirs reached cython: simple.pyx cimports
+    # inc/helper.pxd, resolvable only via target_include_directories().
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+    assert f"simple{ext_suffix}" in file_names
+
+    # CYTHON_ARGS=--annotate reached cython (and not the C compiler): it emits an
+    # HTML report alongside the generated C.
+    assert (build_dir / "CMakeFiles/simple.dir/simple.pyx.o.html").is_file()
+
+    # cython -M produced a depfile that lists the cimported .pxd, so a change to
+    # it triggers a rebuild.
+    depfile = build_dir / "CMakeFiles/simple.dir/simple.pyx.o.c.dep"
+    assert depfile.is_file()
+    assert "helper.pxd" in depfile.read_text()
+
+
 @pytest.mark.parametrize("output_arg", ["empty", "relative", "absolute"])
 def test_output_argument(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, output_arg: str

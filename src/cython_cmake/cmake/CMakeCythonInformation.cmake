@@ -86,11 +86,35 @@ if(NOT CMAKE_Cython_COMPILE_OBJECT)
     # First transpile <SOURCE> to <OBJECT>.c with cython, then reuse the C
     # compile rule (with its source swapped for that generated .c) to build the
     # object file.
+    #
+    # <INCLUDES> is forwarded to cython so that target_include_directories()
+    # reaches the cythonization step (e.g. to resolve cimported .pxd files); the
+    # same include dirs also reach the C compiler for headers. <FLAGS>/<DEFINES>
+    # deliberately stay on the C step only: CMake fills <FLAGS> with
+    # C-compilation options (PIC, build-type flags) that cython rejects.
+    #
+    # CYTHON_ARGS is baked in here, when the language is enabled, so it must be
+    # set before project()/enable_language(Cython). It cannot ride on <FLAGS>
+    # because those are consumed by the C compiler. Join into a single token:
+    # COMPILE_OBJECT is itself a ';'-list of commands, so a list here would be
+    # mistaken for extra commands. (One consequence: no genex support, unlike the
+    # cython_transpile() function.)
+    #
+    # cython -M emits a gcc-style depfile next to its output (<OBJECT>.c.dep)
+    # listing the .pyx and any cimported .pxd files. It has no flag to choose the
+    # depfile path, so copy it onto CMake's <DEP_FILE> and declare the format
+    # (below) to let the generator rebuild when a cimported .pxd changes.
     string(REPLACE "<SOURCE>" "<OBJECT>.c" CMAKE_C_COMPILE_OBJECT_replaced "${CMAKE_C_COMPILE_OBJECT}")
+    string(JOIN " " _cython_args ${CYTHON_ARGS})
     set(CMAKE_Cython_COMPILE_OBJECT
-            "<CMAKE_Cython_COMPILER> -o <OBJECT>.c <SOURCE>"
+            "<CMAKE_Cython_COMPILER> -M ${_cython_args} <INCLUDES> -o <OBJECT>.c <SOURCE>"
+            "\"${CMAKE_COMMAND}\" -E copy <OBJECT>.c.dep <DEP_FILE>"
             "${CMAKE_C_COMPILE_OBJECT_replaced}"
     )
+endif()
+
+if(NOT DEFINED CMAKE_Cython_DEPFILE_FORMAT)
+    set(CMAKE_Cython_DEPFILE_FORMAT gcc)
 endif()
 
 set(CMAKE_Cython_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
