@@ -1,0 +1,3 @@
+# Stand-in for a .pxd generated at build time (e.g. by autopxd).
+cdef inline double helper_square(double x):
+    return x * x
