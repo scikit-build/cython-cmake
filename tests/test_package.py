@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import importlib.metadata
+import re
 import shutil
+import subprocess
+import sysconfig
 import zipfile
 from pathlib import Path
 
@@ -11,6 +14,37 @@ from scikit_build_core.build import build_wheel
 import cython_cmake as m
 
 DIR = Path(__file__).parent.resolve()
+
+
+def _cmake_version() -> tuple[int, ...]:
+    cmake = shutil.which("cmake")
+    if cmake is None:
+        return (0, 0)
+    out = subprocess.run(
+        [cmake, "--version"], capture_output=True, text=True, check=True
+    ).stdout
+    match = re.search(r"(\d+)\.(\d+)", out)
+    return tuple(int(x) for x in match.groups()) if match else (0, 0)
+
+
+# The Cython CMake language relies on the binary-dir-less try_compile signature
+# (CMake >= 3.25). Custom languages only work with the Makefile/Ninja generators,
+# not Visual Studio, so the tests below force Ninja (see language_settings).
+cython_language = pytest.mark.skipif(
+    _cmake_version() < (3, 25),
+    reason="Cython language requires CMake >= 3.25",
+)
+
+
+def language_settings(build_dir: Path) -> dict[str, str | list[str]]:
+    # Custom CMake languages are unsupported by the Visual Studio generator (it
+    # has no concept of a custom-language compile rule), so build with Ninja. On
+    # Windows that means Ninja + MSVC instead of the default Visual Studio.
+    return {
+        "build-dir": str(build_dir),
+        "wheel.license-files": [],
+        "cmake.args": ["-GNinja"],
+    }
 
 
 def test_version() -> None:
@@ -32,6 +66,52 @@ def test_simple(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     build_files = {x.name for x in build_dir.iterdir()}
     assert "simple.c.dep" in build_files
     assert "simple.c" in build_files
+
+
+@cython_language
+def test_simple_language(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(DIR / "packages/simple_language")
+    build_dir = tmp_path / "build"
+
+    wheel = build_wheel(str(tmp_path), language_settings(build_dir))
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    # The extension must carry exactly one (SOABI) suffix; a double ".so.so"
+    # means WITH_SOABI saw a bad Python_SOABI (see CMakeDetermineCythonCompiler).
+    ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+    assert f"simple{ext_suffix}" in file_names
+
+    # Cython transpiles to C, which the C language part then compiles.
+    cython_c = build_dir / "CMakeFiles/simple.dir/simple.pyx.o.c"
+    assert cython_c.is_file()
+
+
+@cython_language
+def test_language_features(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(DIR / "packages/language_features")
+    build_dir = tmp_path / "build"
+
+    # Building at all proves include dirs reached cython: simple.pyx cimports
+    # inc/helper.pxd, resolvable only via target_include_directories().
+    wheel = build_wheel(str(tmp_path), language_settings(build_dir))
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+    assert f"simple{ext_suffix}" in file_names
+
+    # CYTHON_ARGS=--annotate reached cython (and not the C compiler): it emits an
+    # HTML report alongside the generated C.
+    assert (build_dir / "CMakeFiles/simple.dir/simple.pyx.o.html").is_file()
+
+    # cython -M produced a depfile that lists the cimported .pxd, so a change to
+    # it triggers a rebuild.
+    depfile = build_dir / "CMakeFiles/simple.dir/simple.pyx.o.c.dep"
+    assert depfile.is_file()
+    assert "helper.pxd" in depfile.read_text()
 
 
 @pytest.mark.parametrize("output_arg", ["empty", "relative", "absolute"])

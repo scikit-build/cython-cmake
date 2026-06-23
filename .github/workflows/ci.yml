@@ -72,5 +72,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@v8.2.0
 
+      # The Cython language is built with Ninja, which finds the first C compiler
+      # on PATH. Put MSVC there so it is used instead of MinGW, which cannot
+      # compile against the MSVC-built CPython.
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+
       - name: Test package
         run: uv run pytest --durations=20

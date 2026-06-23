@@ -1,0 +1,13 @@
+set(CMAKE_Cython_COMPILER "@CYTHON_EXE@")
+set(CMAKE_Cython_COMPILER_ID "Cython")
+set(CMAKE_Cython_COMPILER_ENV_VAR "CYTHON")
+set(CMAKE_Cython_COMPILER_LOADED 1)
+set(CMAKE_Cython_COMPILER_WORKS 1 CACHE INTERNAL "")
+
+set(CMAKE_INCLUDE_FLAG_Cython "-I")
+
+# Cython transpiles .pyx/.py sources to C, which is then compiled to an object
+# file by the C compiler (see CMakeCythonInformation.cmake).
+set(CMAKE_Cython_OUTPUT_EXTENSION ".o")
+set(CMAKE_Cython_IGNORE_EXTENSIONS "c;o;O;obj;OBJ")
+set(CMAKE_Cython_SOURCE_FILE_EXTENSIONS "pyx;py")
