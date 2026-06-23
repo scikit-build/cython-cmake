@@ -106,11 +106,13 @@ def test_directive_cxx(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     shutil.copytree(DIR / "packages/simple", package_dir)
     monkeypatch.chdir(package_dir)
 
+    # Enable both C and CXX so the language is decided by the directive alone
+    # (the deduction path is only reached when both languages are enabled).
     cmakelists = Path("CMakeLists.txt")
     txt = (
         cmakelists.read_text()
         .replace("LANGUAGE C", "")
-        .replace("LANGUAGES C", "LANGUAGES CXX")
+        .replace("LANGUAGES C", "LANGUAGES C CXX")
     )
     cmakelists.write_text(txt)
 

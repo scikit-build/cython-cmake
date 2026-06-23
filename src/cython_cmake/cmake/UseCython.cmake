@@ -244,9 +244,11 @@ function(_cython_compute_language OUTPUT_VARIABLE FILENAME)
   file(READ "${FILENAME}" FILE_CONTENT)
   # Check for compiler directive similar to "# distutils: language = c++"
   # See https://cython.readthedocs.io/en/latest/src/userguide/wrapping_CPlusPlus.html#declare-a-var-with-the-wrapped-c-class
-  set(REGEX_PATTERN [=[^[[:space:]]*#[[:space:]]*distutils:.*language[[:space:]]*=[[:space:]]*(c\\+\\+|c)]=])
+  # CMake regex has no POSIX classes ([[:space:]]) and bracket args take no
+  # backslash escapes, so match whitespace explicitly and read the capture group.
+  set(REGEX_PATTERN [=[#[ \t]*distutils:[^\n]*language[ \t]*=[ \t]*(c\+\+|c)]=])
   string(REGEX MATCH "${REGEX_PATTERN}" MATCH_RESULT "${FILE_CONTENT}")
-  string(TOUPPER "${MATCH_RESULT}" LANGUAGE_NAME)
+  string(TOUPPER "${CMAKE_MATCH_1}" LANGUAGE_NAME)
   string(REPLACE "+" "X" LANGUAGE_NAME "${LANGUAGE_NAME}")
   set(${OUTPUT_VARIABLE} ${LANGUAGE_NAME} PARENT_SCOPE)
 endfunction()
