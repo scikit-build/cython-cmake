@@ -4,7 +4,6 @@ import importlib.metadata
 import re
 import shutil
 import subprocess
-import sys
 import sysconfig
 import zipfile
 from pathlib import Path
@@ -28,13 +27,24 @@ def _cmake_version() -> tuple[int, ...]:
     return tuple(int(x) for x in match.groups()) if match else (0, 0)
 
 
-# The Cython CMake language is experimental: it relies on the binary-dir-less
-# try_compile signature (CMake >= 3.25) and does not yet install the built
-# module on Windows multi-config generators.
+# The Cython CMake language relies on the binary-dir-less try_compile signature
+# (CMake >= 3.25). Custom languages only work with the Makefile/Ninja generators,
+# not Visual Studio, so the tests below force Ninja (see language_settings).
 cython_language = pytest.mark.skipif(
-    sys.platform == "win32" or _cmake_version() < (3, 25),
-    reason="Cython language requires CMake >= 3.25 and is unsupported on Windows",
+    _cmake_version() < (3, 25),
+    reason="Cython language requires CMake >= 3.25",
 )
+
+
+def language_settings(build_dir: Path) -> dict[str, str | list[str]]:
+    # Custom CMake languages are unsupported by the Visual Studio generator (it
+    # has no concept of a custom-language compile rule), so build with Ninja. On
+    # Windows that means Ninja + MSVC instead of the default Visual Studio.
+    return {
+        "build-dir": str(build_dir),
+        "wheel.license-files": [],
+        "cmake.args": ["-GNinja"],
+    }
 
 
 def test_version() -> None:
@@ -63,9 +73,7 @@ def test_simple_language(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
     monkeypatch.chdir(DIR / "packages/simple_language")
     build_dir = tmp_path / "build"
 
-    wheel = build_wheel(
-        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
-    )
+    wheel = build_wheel(str(tmp_path), language_settings(build_dir))
 
     with zipfile.ZipFile(tmp_path / wheel) as f:
         file_names = set(f.namelist())
@@ -88,9 +96,7 @@ def test_language_features(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
 
     # Building at all proves include dirs reached cython: simple.pyx cimports
     # inc/helper.pxd, resolvable only via target_include_directories().
-    wheel = build_wheel(
-        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
-    )
+    wheel = build_wheel(str(tmp_path), language_settings(build_dir))
 
     with zipfile.ZipFile(tmp_path / wheel) as f:
         file_names = set(f.namelist())
