@@ -78,6 +78,93 @@ if(CMAKE_VERSION VERSION_LESS "3.8")
   message(FATAL_ERROR "CMake 3.8 required for COMMAND_EXPAND_LISTS")
 endif()
 
+# Helpers used by Cython_transpile. Defined at file scope (rather than nested)
+# so they are registered once; like Cython_transpile they read some values
+# (e.g. _cython_command, _args_CYTHON_ARGS) from the caller via CMake's
+# dynamic scoping.
+function(_transpile _source_file generated_file language)
+
+  if(language STREQUAL "C")
+    set(_language_arg "")
+  elseif(language STREQUAL "CXX")
+    set(_language_arg "--cplus")
+  else()
+    message(FATAL_ERROR "_transpile language must be one of C or CXX")
+  endif()
+
+  set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
+
+  # Generated depfile is expected to have the ".dep" extension and be located along
+  # side the generated source file.
+  set(_depfile ${generated_file}.dep)
+  set(_depfile_arg "-M")
+
+  # Normalize the input path
+  get_filename_component(_source_file "${_source_file}" ABSOLUTE)
+
+  # Pretty-printed output names
+  file(RELATIVE_PATH generated_file_relative
+      "${CMAKE_BINARY_DIR}" "${generated_file}")
+  file(RELATIVE_PATH source_file_relative
+      "${CMAKE_SOURCE_DIR}" "${_source_file}")
+  set(comment "Generating ${language} source '${generated_file_relative}' from '${source_file_relative}'")
+
+  # Get output directory to ensure its exists
+  get_filename_component(output_directory "${generated_file}" DIRECTORY)
+
+  get_source_file_property(pyx_location ${_source_file} LOCATION)
+
+  # Add the command to run the compiler.
+  # Keep _args_CYTHON_ARGS quoted: a generator expression can contain ';'
+  add_custom_command(
+    OUTPUT "${generated_file}"
+    COMMAND
+      "${CMAKE_COMMAND}" -E make_directory "${output_directory}"
+    COMMAND
+      ${_cython_command}
+      ${_language_arg}
+      "${_args_CYTHON_ARGS}"
+      ${_depfile_arg}
+      "${pyx_location}"
+      --output-file "${generated_file}"
+    COMMAND_EXPAND_LISTS
+    MAIN_DEPENDENCY
+      "${_source_file}"
+    DEPFILE
+      "${_depfile}"
+    VERBATIM
+    COMMENT "${comment}"
+  )
+endfunction()
+
+function(_set_output _input_file _language _output_var)
+  if(_language STREQUAL "C")
+    set(_language_extension "c")
+  elseif(_language STREQUAL "CXX")
+    set(_language_extension "cxx")
+  else()
+    message(FATAL_ERROR "_set_output language must be one of C or CXX")
+  endif()
+
+  # Can use cmake_path for CMake 3.20+
+  # cmake_path(GET _input_file STEM basename)
+  get_filename_component(_basename "${_input_file}" NAME_WE)
+
+  if(IS_ABSOLUTE "${_input_file}")
+    file(RELATIVE_PATH _input_relative "${CMAKE_CURRENT_SOURCE_DIR}" "${_input_file}")
+  else()
+    set(_input_relative "${_input_file}")
+  endif()
+
+  get_filename_component(_output_relative_dir "${_input_relative}" DIRECTORY)
+  string(REPLACE "." "_" _output_relative_dir "${_output_relative_dir}")
+  if(_output_relative_dir)
+    set(_output_relative_dir "${_output_relative_dir}/")
+  endif()
+
+  set(${_output_var} "${CMAKE_CURRENT_BINARY_DIR}/${_output_relative_dir}${_basename}.${_language_extension}" PARENT_SCOPE)
+endfunction()
+
 function(Cython_transpile)
   set(_options )
   set(_one_value LANGUAGE OUTPUT OUTPUT_VARIABLE)
@@ -111,89 +198,6 @@ function(Cython_transpile)
   if(NOT input_length EQUAL 1)
     message(FATAL_ERROR "One and only one input file must be specified, got '${_source_files}'")
   endif()
-
-  function(_transpile _source_file generated_file language)
-
-    if(language STREQUAL "C")
-      set(_language_arg "")
-    elseif(language STREQUAL "CXX")
-      set(_language_arg "--cplus")
-    else()
-      message(FATAL_ERROR "_transpile language must be one of C or CXX")
-    endif()
-
-    set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
-
-    # Generated depfile is expected to have the ".dep" extension and be located along
-    # side the generated source file.
-    set(_depfile ${generated_file}.dep)
-    set(_depfile_arg "-M")
-
-    # Normalize the input path
-    get_filename_component(_source_file "${_source_file}" ABSOLUTE)
-
-    # Pretty-printed output names
-    file(RELATIVE_PATH generated_file_relative
-        "${CMAKE_BINARY_DIR}" "${generated_file}")
-    file(RELATIVE_PATH source_file_relative
-        "${CMAKE_SOURCE_DIR}" "${_source_file}")
-    set(comment "Generating ${language} source '${generated_file_relative}' from '${source_file_relative}'")
-
-    # Get output directory to ensure its exists
-    get_filename_component(output_directory "${generated_file}" DIRECTORY)
-
-    get_source_file_property(pyx_location ${_source_file} LOCATION)
-
-    # Add the command to run the compiler.
-    # Keep _args_CYTHON_ARGS quoted: a generator expression can contain ';'
-    add_custom_command(
-      OUTPUT "${generated_file}"
-      COMMAND
-        "${CMAKE_COMMAND}" -E make_directory "${output_directory}"
-      COMMAND
-        ${_cython_command}
-        ${_language_arg}
-        "${_args_CYTHON_ARGS}"
-        ${_depfile_arg}
-        "${pyx_location}"
-        --output-file "${generated_file}"
-      COMMAND_EXPAND_LISTS
-      MAIN_DEPENDENCY
-        "${_source_file}"
-      DEPFILE
-        "${_depfile}"
-      VERBATIM
-      COMMENT "${comment}"
-    )
-  endfunction()
-
-  function(_set_output _input_file _language _output_var)
-    if(_language STREQUAL "C")
-      set(_language_extension "c")
-    elseif(_language STREQUAL "CXX")
-      set(_language_extension "cxx")
-    else()
-      message(FATAL_ERROR "_set_output language must be one of C or CXX")
-    endif()
-
-    # Can use cmake_path for CMake 3.20+
-    # cmake_path(GET _input_file STEM basename)
-    get_filename_component(_basename "${_input_file}" NAME_WE)
-
-    if(IS_ABSOLUTE "${_input_file}")
-      file(RELATIVE_PATH _input_relative "${CMAKE_CURRENT_SOURCE_DIR}" "${_input_file}")
-    else()
-      set(_input_relative "${_input_file}")
-    endif()
-
-    get_filename_component(_output_relative_dir "${_input_relative}" DIRECTORY)
-    string(REPLACE "." "_" _output_relative_dir "${_output_relative_dir}")
-    if(_output_relative_dir)
-      set(_output_relative_dir "${_output_relative_dir}/")
-    endif()
-
-    set(${_output_var} "${CMAKE_CURRENT_BINARY_DIR}/${_output_relative_dir}${_basename}.${_language_extension}" PARENT_SCOPE)
-  endfunction()
 
   set(generated_files)
 
