@@ -189,6 +189,25 @@ def test_depends_generated_pxd(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) 
     assert "simple.c" in build_files
 
 
+def test_cpp_library(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(DIR / "packages/cpp_library")
+    build_dir = tmp_path / "build"
+
+    # The .pyx wraps a C++ class from a library built in the same project; the
+    # extension module is linked against that library via target_link_libraries.
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in build_dir.iterdir()}
+    assert "wrapper.cxx.dep" in build_files
+    assert "wrapper.cxx" in build_files
+
+
 def test_genex_cython_args(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capfd: pytest.CaptureFixture[str]
 ) -> None:
