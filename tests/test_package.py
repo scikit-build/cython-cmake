@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import importlib.metadata
+import re
 import shutil
+import subprocess
+import sys
+import sysconfig
 import zipfile
 from pathlib import Path
 
@@ -11,6 +15,26 @@ from scikit_build_core.build import build_wheel
 import cython_cmake as m
 
 DIR = Path(__file__).parent.resolve()
+
+
+def _cmake_version() -> tuple[int, ...]:
+    cmake = shutil.which("cmake")
+    if cmake is None:
+        return (0, 0)
+    out = subprocess.run(
+        [cmake, "--version"], capture_output=True, text=True, check=True
+    ).stdout
+    match = re.search(r"(\d+)\.(\d+)", out)
+    return tuple(int(x) for x in match.groups()) if match else (0, 0)
+
+
+# The Cython CMake language is experimental: it relies on the binary-dir-less
+# try_compile signature (CMake >= 3.25) and does not yet install the built
+# module on Windows multi-config generators.
+cython_language = pytest.mark.skipif(
+    sys.platform == "win32" or _cmake_version() < (3, 25),
+    reason="Cython language requires CMake >= 3.25 and is unsupported on Windows",
+)
 
 
 def test_version() -> None:
@@ -32,6 +56,29 @@ def test_simple(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     build_files = {x.name for x in build_dir.iterdir()}
     assert "simple.c.dep" in build_files
     assert "simple.c" in build_files
+
+
+@cython_language
+def test_simple_language(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(DIR / "packages/simple_language")
+    build_dir = tmp_path / "build"
+
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    # The extension must carry exactly one (SOABI) suffix; a double ".so.so"
+    # means WITH_SOABI saw a bad Python_SOABI (see CMakeDetermineCythonCompiler).
+    ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+    assert f"simple{ext_suffix}" in file_names
+
+    # Cython transpiles to C, which the C language part then compiles.
+    cython_c = build_dir / "CMakeFiles/simple.dir/simple.pyx.o.c"
+    assert cython_c.is_file()
 
 
 @pytest.mark.parametrize("output_arg", ["empty", "relative", "absolute"])
