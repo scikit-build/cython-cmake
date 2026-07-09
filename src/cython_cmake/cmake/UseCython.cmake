@@ -14,6 +14,8 @@
 #                   [MODULE_NAME <module_name>]
 #                   [OUTPUT <OutputFile>]
 #                   [OUTPUT_VARIABLE <OutputVariable>]
+#                   [PUBLIC_HEADER_VARIABLE <PublicHeaderVariable>]
+#                   [API_HEADER_VARIABLE <ApiHeaderVariable>]
 #                   [DEPENDS <depends> ...])
 #
 # Options:
@@ -55,10 +57,26 @@
 #   Set the variable ``<OutputVariable>`` in the parent scope to the path to the
 #   generated source file.
 #
+# ``PUBLIC_HEADER_VARIABLE <PublicHeaderVariable>``
+#   A ``.pyx`` with ``cdef public`` declarations makes Cython write a
+#   ``<name>.h`` header next to the generated source. Pass this to declare that
+#   header as an additional output (so other targets can depend on it) and set
+#   ``<PublicHeaderVariable>`` in the parent scope to its path.
+#
+# ``API_HEADER_VARIABLE <ApiHeaderVariable>``
+#   As ``PUBLIC_HEADER_VARIABLE``, but for the ``<name>_api.h`` header Cython
+#   writes for ``cdef api`` declarations.
+#
 # Defined variables:
 #
 # ``<OutputVariable>``
 #   The path of the generated source file.
+#
+# ``<PublicHeaderVariable>``
+#   The path of the generated ``cdef public`` header, if requested.
+#
+# ``<ApiHeaderVariable>``
+#   The path of the generated ``cdef api`` header, if requested.
 #
 # Usage example:
 #
@@ -115,7 +133,9 @@ function(_transpile _source_file generated_file language)
     message(FATAL_ERROR "_transpile language must be one of C or CXX")
   endif()
 
-  set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
+  # _header_outputs (read from the caller's scope) holds any cdef public / api
+  # headers Cython writes as a side effect; declare them as extra outputs.
+  set_source_files_properties(${generated_file} ${_header_outputs} PROPERTIES GENERATED TRUE)
 
   if(_args_MODULE_NAME)
     set(_module_name_arg "--module-name" "${_args_MODULE_NAME}")
@@ -157,7 +177,7 @@ function(_transpile _source_file generated_file language)
   # Add the command to run the compiler.
   # Keep _args_CYTHON_ARGS quoted: a generator expression can contain ';'
   add_custom_command(
-    OUTPUT "${generated_file}"
+    OUTPUT "${generated_file}" ${_header_outputs}
     COMMAND
       "${CMAKE_COMMAND}" -E make_directory "${output_directory}"
     COMMAND
@@ -213,7 +233,7 @@ endfunction()
 
 function(Cython_transpile)
   set(_options )
-  set(_one_value LANGUAGE MODULE_NAME OUTPUT OUTPUT_VARIABLE)
+  set(_one_value LANGUAGE MODULE_NAME OUTPUT OUTPUT_VARIABLE PUBLIC_HEADER_VARIABLE API_HEADER_VARIABLE)
   set(_multi_value CYTHON_ARGS INCLUDE_DIRECTORIES DEPENDS)
 
   cmake_parse_arguments(_args
@@ -291,6 +311,25 @@ function(Cython_transpile)
   endif()
 
   set(generated_file "${_args_OUTPUT}")
+
+  # Cython writes cdef public / api headers next to the generated source, named
+  # after its basename. Declare the requested ones as extra outputs (via
+  # _header_outputs, read by _transpile) so downstream targets can depend on
+  # them, and hand their paths back to the caller.
+  set(_header_outputs)
+  if(_args_PUBLIC_HEADER_VARIABLE OR _args_API_HEADER_VARIABLE)
+    get_filename_component(_header_dir "${generated_file}" DIRECTORY)
+    get_filename_component(_header_stem "${generated_file}" NAME_WE)
+  endif()
+  if(_args_PUBLIC_HEADER_VARIABLE)
+    set(_public_header "${_header_dir}/${_header_stem}.h")
+    list(APPEND _header_outputs "${_public_header}")
+  endif()
+  if(_args_API_HEADER_VARIABLE)
+    set(_api_header "${_header_dir}/${_header_stem}_api.h")
+    list(APPEND _header_outputs "${_api_header}")
+  endif()
+
   _transpile("${_source_file}" "${generated_file}" ${_language})
   list(APPEND generated_files "${generated_file}")
 
@@ -298,6 +337,14 @@ function(Cython_transpile)
   if(_args_OUTPUT_VARIABLE)
     set(_output_variable ${_args_OUTPUT_VARIABLE})
     set(${_output_variable} "${generated_files}" PARENT_SCOPE)
+  endif()
+
+  if(_args_PUBLIC_HEADER_VARIABLE)
+    set(${_args_PUBLIC_HEADER_VARIABLE} "${_public_header}" PARENT_SCOPE)
+  endif()
+
+  if(_args_API_HEADER_VARIABLE)
+    set(${_args_API_HEADER_VARIABLE} "${_api_header}" PARENT_SCOPE)
   endif()
 
 endfunction()

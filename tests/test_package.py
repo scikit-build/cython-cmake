@@ -257,6 +257,28 @@ def test_cpp_library(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     assert "wrapper.cxx" in build_files
 
 
+def test_public_headers(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(DIR / "packages/public_headers")
+    build_dir = tmp_path / "build"
+
+    # mymath.pyx has cdef public / cdef api declarations; a separate target
+    # #includes the generated headers. Without cython_transpile declaring them
+    # as outputs (and returning their paths for OBJECT_DEPENDS), that target has
+    # no rule ordering it after Cython and the build races on the header.
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in build_dir.iterdir()}
+    assert "mymath.c" in build_files
+    assert "mymath.h" in build_files
+    assert "mymath_api.h" in build_files
+
+
 def test_genex_cython_args(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capfd: pytest.CaptureFixture[str]
 ) -> None:
