@@ -121,6 +121,17 @@ function(_transpile _source_file generated_file language)
 
   get_source_file_property(pyx_location ${_source_file} LOCATION)
 
+  # -a/--annotate, --annotate-fullc, and --annotate-coverage=FILE all produce
+  # a colorized HTML file alongside the generated source, named after it
+  # (e.g. "foo.c" -> "foo.html"). Bound the match on non-identifier chars so
+  # it doesn't false-positive on args like "-abc" or "--annotate-something",
+  # and so it still matches inside a "$<1:...>" generator expression.
+  set(_byproducts "")
+  if("${_args_CYTHON_ARGS}" MATCHES "(^|[^A-Za-z0-9_-])(-a|--annotate|--annotate-fullc|--annotate-coverage=[^;]*)([^A-Za-z0-9_-]|$)")
+    get_filename_component(_generated_we "${generated_file}" NAME_WE)
+    set(_byproducts "${output_directory}/${_generated_we}.html")
+  endif()
+
   # Add the command to run the compiler.
   # Keep _args_CYTHON_ARGS quoted: a generator expression can contain ';'
   add_custom_command(
@@ -141,6 +152,8 @@ function(_transpile _source_file generated_file language)
       ${_args_DEPENDS}
     DEPFILE
       "${_depfile}"
+    BYPRODUCTS
+      ${_byproducts}
     VERBATIM
     COMMENT "${comment}"
   )
