@@ -12,6 +12,10 @@ import cython_cmake as m
 
 DIR = Path(__file__).parent.resolve()
 
+CYTHON_VERSION = tuple(
+    int(x) for x in importlib.metadata.version("cython").split(".")[:2]
+)
+
 
 def test_version() -> None:
     assert importlib.metadata.version("cython_cmake") == m.__version__
@@ -244,3 +248,29 @@ def test_genex_cython_args(
     # Check side-effect of "--verbose"
     captured = capfd.readouterr()
     assert "Compiling " in captured.out or "Compiling " in captured.err
+
+
+@pytest.mark.skipif(
+    CYTHON_VERSION < (3, 1),
+    reason="freethreading_compatible directive needs Cython 3.1+",
+)
+def test_freethreading_compatible(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    package_dir = tmp_path / "pkg7"
+    shutil.copytree(DIR / "packages/simple", package_dir)
+    monkeypatch.chdir(package_dir)
+
+    build_dir = tmp_path / "build"
+
+    cmakelists = Path("CMakeLists.txt")
+    txt = cmakelists.read_text().replace(
+        "# PLACEHOLDER", 'CYTHON_ARGS "-X;freethreading_compatible=True"'
+    )
+    cmakelists.write_text(txt)
+
+    build_wheel(str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []})
+
+    # The module declares it runs without the GIL only when the directive is set.
+    generated_c = (build_dir / "simple.c").read_text()
+    assert "PyUnstable_Module_SetGIL(__pyx_m, Py_MOD_GIL_NOT_USED)" in generated_c
