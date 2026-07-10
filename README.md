@@ -32,6 +32,7 @@ cython_transpile(<pyx_file>
                  [LANGUAGE C | CXX]
                  [CYTHON_ARGS <args> ...]
                  [INCLUDE_DIRECTORIES <dir> ...]
+                 [MODULE_NAME <module_name>]
                  [OUTPUT <OutputFile>]
                  [OUTPUT_VARIABLE <OutputVariable>]
                  [DEPENDS <depends> ...]
@@ -52,6 +53,12 @@ each is passed to Cython as `-I <dir>`, with relative paths resolved against the
 current source directory. Prefer this over adding `-I` to `CYTHON_ARGS`, which
 is a single escape hatch. See
 [Sharing `.pxd` files between packages](#sharing-pxd-files-between-packages).
+
+`MODULE_NAME` sets the fully qualified dotted module name (e.g. `pkg.sub.mod`),
+forwarded as `--module-name`. Without it, Cython derives the name from the
+filename and can only qualify it with the containing package if it can walk
+`__init__` files from the source location — set this explicitly when that is not
+the case, since it affects `__module__`, pickling, and error messages.
 
 `cimport`ed `.pxd` files are tracked automatically through the depfile. Use
 `DEPENDS` for extra files or targets the transpilation needs but that do not

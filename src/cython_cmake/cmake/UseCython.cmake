@@ -11,6 +11,7 @@
 #                   [LANGUAGE C | CXX]
 #                   [CYTHON_ARGS <args> ...]
 #                   [INCLUDE_DIRECTORIES <dir> ...]
+#                   [MODULE_NAME <module_name>]
 #                   [OUTPUT <OutputFile>]
 #                   [OUTPUT_VARIABLE <OutputVariable>]
 #                   [DEPENDS <depends> ...])
@@ -30,6 +31,14 @@
 #   as ``-I <dir>``. Relative paths are resolved against
 #   ``CMAKE_CURRENT_SOURCE_DIR``. Use this to consume ``.pxd`` files installed by
 #   another package (see the README) instead of overloading ``CYTHON_ARGS``.
+#
+# ``MODULE_NAME <module_name>``
+#   Set the fully qualified dotted module name (forwarded as ``--module-name``),
+#   e.g. ``pkg.sub.mod``. Without this, Cython derives the name from the
+#   filename, and can only qualify it with the containing package if it can
+#   walk ``__init__`` files from the source location, which is not always the
+#   case (e.g. when the ``.pyx`` is generated into a location outside the
+#   package tree). Affects ``__module__``, pickling, and error messages.
 #
 # ``DEPENDS <depends>``
 #   Extra files or targets the transpilation depends on, forwarded to the
@@ -108,6 +117,12 @@ function(_transpile _source_file generated_file language)
 
   set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
 
+  if(_args_MODULE_NAME)
+    set(_module_name_arg "--module-name" "${_args_MODULE_NAME}")
+  else()
+    set(_module_name_arg "")
+  endif()
+
   # Generated depfile is expected to have the ".dep" extension and be located along
   # side the generated source file.
   set(_depfile ${generated_file}.dep)
@@ -149,6 +164,7 @@ function(_transpile _source_file generated_file language)
       ${_cython_command}
       ${_language_arg}
       ${_include_args}
+      ${_module_name_arg}
       "${_args_CYTHON_ARGS}"
       ${_depfile_arg}
       "${pyx_location}"
@@ -197,7 +213,7 @@ endfunction()
 
 function(Cython_transpile)
   set(_options )
-  set(_one_value LANGUAGE OUTPUT OUTPUT_VARIABLE)
+  set(_one_value LANGUAGE MODULE_NAME OUTPUT OUTPUT_VARIABLE)
   set(_multi_value CYTHON_ARGS INCLUDE_DIRECTORIES DEPENDS)
 
   cmake_parse_arguments(_args

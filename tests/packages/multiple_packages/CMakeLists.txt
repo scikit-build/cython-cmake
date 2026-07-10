@@ -37,8 +37,7 @@ file(COPY package1/package2/module.pyx DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/.
 
 cython_transpile(${CMAKE_CURRENT_SOURCE_DIR}/../module.pyx
   LANGUAGE C
-  CYTHON_ARGS
-    --module-name "package1.package3.module"
+  MODULE_NAME "package1.package3.module"
   OUTPUT_VARIABLE module_c
 )
 

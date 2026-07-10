@@ -188,6 +188,11 @@ def test_multiple_packages(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
     assert "module.c.dep" in package3_build_files
     assert "module.c" in package3_build_files
 
+    # MODULE_NAME should give the module its fully-qualified dotted name, even
+    # though it lives outside any package directory Cython could walk.
+    module3_c = (build_dir / "__/module.c").read_text()
+    assert "package1.package3.module" in module3_c
+
 
 def test_depends_generated_pxd(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     package_dir = tmp_path / "pkg7"
