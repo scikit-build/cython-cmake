@@ -10,6 +10,7 @@
 #   Cython_transpile(<pyx_file>
 #                   [LANGUAGE C | CXX]
 #                   [CYTHON_ARGS <args> ...]
+#                   [INCLUDE_DIRECTORIES <dir> ...]
 #                   [OUTPUT <OutputFile>]
 #                   [OUTPUT_VARIABLE <OutputVariable>]
 #                   [DEPENDS <depends> ...])
@@ -23,6 +24,12 @@
 # ``CYTHON_ARGS <args>``
 #   Specify additional arguments for the cythonization process. Will default to
 #   the ``CYTHON_ARGS`` variable if not specified.
+#
+# ``INCLUDE_DIRECTORIES <dir> ...``
+#   Directories searched for ``cimport``ed ``.pxd`` files, each passed to cython
+#   as ``-I <dir>``. Relative paths are resolved against
+#   ``CMAKE_CURRENT_SOURCE_DIR``. Use this to consume ``.pxd`` files installed by
+#   another package (see the README) instead of overloading ``CYTHON_ARGS``.
 #
 # ``DEPENDS <depends>``
 #   Extra files or targets the transpilation depends on, forwarded to the
@@ -141,6 +148,7 @@ function(_transpile _source_file generated_file language)
     COMMAND
       ${_cython_command}
       ${_language_arg}
+      ${_include_args}
       "${_args_CYTHON_ARGS}"
       ${_depfile_arg}
       "${pyx_location}"
@@ -190,7 +198,7 @@ endfunction()
 function(Cython_transpile)
   set(_options )
   set(_one_value LANGUAGE OUTPUT OUTPUT_VARIABLE)
-  set(_multi_value CYTHON_ARGS DEPENDS)
+  set(_multi_value CYTHON_ARGS INCLUDE_DIRECTORIES DEPENDS)
 
   cmake_parse_arguments(_args
     "${_options}"
@@ -213,6 +221,18 @@ function(Cython_transpile)
   if(NOT _args_CYTHON_ARGS AND DEFINED CYTHON_ARGS)
     set(_args_CYTHON_ARGS "${CYTHON_ARGS}")
   endif()
+
+  # Turn each include directory into a "-I <dir>" pair for cython, resolving
+  # relative paths against the current source dir (like OUTPUT/source paths).
+  # Read by _transpile via dynamic scoping.
+  set(_include_args)
+  foreach(_include_dir IN LISTS _args_INCLUDE_DIRECTORIES)
+    if(NOT IS_ABSOLUTE "${_include_dir}")
+      get_filename_component(_include_dir "${_include_dir}" ABSOLUTE
+        BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+    endif()
+    list(APPEND _include_args "-I" "${_include_dir}")
+  endforeach()
 
   # Get input
   set(_source_files ${_args_UNPARSED_ARGUMENTS})

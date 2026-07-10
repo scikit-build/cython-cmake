@@ -31,6 +31,7 @@ module will provide the following helper function:
 cython_transpile(<pyx_file>
                  [LANGUAGE C | CXX]
                  [CYTHON_ARGS <args> ...]
+                 [INCLUDE_DIRECTORIES <dir> ...]
                  [OUTPUT <OutputFile>]
                  [OUTPUT_VARIABLE <OutputVariable>]
                  [DEPENDS <depends> ...]
@@ -45,6 +46,12 @@ The location of the produced file is placed in the variable specified by
 `OUTPUT_VARIABLE` if given. Extra arguments to the Cython executable can be
 given with `CYTHON_ARGS`, and if this is not set, it will take a default from a
 `CYTHON_ARGS` variable.
+
+`INCLUDE_DIRECTORIES` lists directories to search for `cimport`ed `.pxd` files;
+each is passed to Cython as `-I <dir>`, with relative paths resolved against the
+current source directory. Prefer this over adding `-I` to `CYTHON_ARGS`, which
+is a single escape hatch. See
+[Sharing `.pxd` files between packages](#sharing-pxd-files-between-packages).
 
 `cimport`ed `.pxd` files are tracked automatically through the depfile. Use
 `DEPENDS` for extra files or targets the transpilation needs but that do not
@@ -72,6 +79,43 @@ cython_transpile(simple.pyx LANGUAGE C OUTPUT_VARIABLE simple_c)
 python_add_library(simple MODULE "${simple_c}" WITH_SOABI)
 install(TARGETS simple DESTINATION .)
 ```
+
+## Sharing `.pxd` files between packages
+
+If your package exposes declarations that others should be able to `cimport`
+(the NumPy pattern), install the `.pxd` files next to the compiled modules so
+they ship in the wheel:
+
+```cmake
+install(TARGETS mymod DESTINATION mypkg)
+install(FILES mymod.pxd DESTINATION mypkg)
+```
+
+A consumer then locates the installed package and points `INCLUDE_DIRECTORIES`
+at it. The provider's install root can be found by querying its module location
+with the Python interpreter you already found:
+
+```cmake
+find_package(
+  Python
+  COMPONENTS Interpreter Development.Module
+  REQUIRED)
+
+execute_process(
+  COMMAND "${Python_EXECUTABLE}" -c
+          "import mypkg, os; print(os.path.dirname(mypkg.__file__))"
+  OUTPUT_VARIABLE mypkg_include_dir
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+cython_transpile(consumer.pyx
+  INCLUDE_DIRECTORIES "${mypkg_include_dir}"
+  OUTPUT_VARIABLE consumer_c
+)
+```
+
+The consumer's `.pyx` can now `cimport` from the provider (e.g.
+`from mypkg.mymod cimport ...`). `cimport`ed `.pxd` files reached this way are
+tracked in the depfile like any other, so incremental rebuilds work.
 
 ## scikit-build-core
 
