@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -248,6 +249,18 @@ def test_genex_cython_args(
     # Check side-effect of "--verbose"
     captured = capfd.readouterr()
     assert "Compiling " in captured.out or "Compiling " in captured.err
+
+    # The annotation HTML must be declared as a BYPRODUCTS of the custom
+    # command so the build system knows to clean it up. Only Ninja is
+    # guaranteed to remove byproducts on clean (MSBuild is not).
+    if build_dir.joinpath("build.ninja").is_file():
+        cmake = shutil.which("cmake")
+        assert cmake is not None
+        subprocess.run(
+            [cmake, "--build", str(build_dir), "--target", "clean"], check=True
+        )
+        build_files = {x.name for x in build_dir.iterdir()}
+        assert "simple.html" not in build_files
 
 
 @pytest.mark.skipif(
