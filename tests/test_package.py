@@ -39,6 +39,25 @@ def test_simple(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     assert "simple.c" in build_files
 
 
+def test_pure_python(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # Cython also compiles pure-Python ".py" modules (PEP 484 / "pure Python
+    # mode"); cython_transpile is filename-agnostic so this should just work.
+    monkeypatch.chdir(DIR / "packages/pure_python")
+    build_dir = tmp_path / "build"
+
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in build_dir.iterdir()}
+    assert "square.c.dep" in build_files
+    assert "square.c" in build_files
+
+
 @pytest.mark.parametrize("output_arg", ["empty", "relative", "absolute"])
 def test_output_argument(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, output_arg: str

@@ -90,6 +90,7 @@ report.exclude_also = [
 
 [tool.mypy]
 files = ["src", "tests"]
+exclude = ["^tests/packages/"]
 python_version = "3.8"
 warn_unused_configs = true
 strict = true
@@ -119,6 +120,7 @@ flake8-annotations.allow-star-arg-any = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["T20", "INP001", "S603"]
+"tests/packages/**" = ["ERA001"] # "# cython:" directives look like commented-out code
 "noxfile.py" = ["T20"]
 
 

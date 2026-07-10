@@ -38,8 +38,10 @@ cython_transpile(<pyx_file>
 ```
 
 This function takes a pyx file and makes a matching `.c` / `.cxx` file in the
-current binary directory (exact path can be specified with `OUTPUT`). The
-location of the produced file is placed in the variable specified by
+current binary directory (exact path can be specified with `OUTPUT`). A `.py`
+file can be given instead, to support Cython's
+[pure Python mode](https://cython.readthedocs.io/en/latest/src/tutorial/pure.html).
+The location of the produced file is placed in the variable specified by
 `OUTPUT_VARIABLE` if given. Extra arguments to the Cython executable can be
 given with `CYTHON_ARGS`, and if this is not set, it will take a default from a
 `CYTHON_ARGS` variable.
