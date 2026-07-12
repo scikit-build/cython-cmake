@@ -35,6 +35,8 @@ cython_transpile(<pyx_file>
                  [MODULE_NAME <module_name>]
                  [OUTPUT <OutputFile>]
                  [OUTPUT_VARIABLE <OutputVariable>]
+                 [PUBLIC_HEADER_VARIABLE <PublicHeaderVariable>]
+                 [API_HEADER_VARIABLE <ApiHeaderVariable>]
                  [DEPENDS <depends> ...]
                  )
 ```
@@ -59,6 +61,13 @@ forwarded as `--module-name`. Without it, Cython derives the name from the
 filename and can only qualify it with the containing package if it can walk
 `__init__` files from the source location — set this explicitly when that is not
 the case, since it affects `__module__`, pickling, and error messages.
+
+A `.pyx` with `cdef public` or `cdef api` declarations makes Cython write a
+`<name>.h` or `<name>_api.h` header next to the generated source. Pass
+`PUBLIC_HEADER_VARIABLE` and/or `API_HEADER_VARIABLE` to declare those headers
+as build outputs (so other targets can depend on them) and receive their paths
+in the given variables. This is useful when embedding Cython in a larger C/C++
+application.
 
 `cimport`ed `.pxd` files are tracked automatically through the depfile. Use
 `DEPENDS` for extra files or targets the transpilation needs but that do not
