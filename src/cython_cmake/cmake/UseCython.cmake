@@ -170,8 +170,10 @@ function(_transpile _source_file generated_file language)
   # and so it still matches inside a "$<1:...>" generator expression.
   set(_byproducts "")
   if("${_args_CYTHON_ARGS}" MATCHES "(^|[^A-Za-z0-9_-])(-a|--annotate|--annotate-fullc|--annotate-coverage=[^;]*)([^A-Za-z0-9_-]|$)")
-    get_filename_component(_generated_we "${generated_file}" NAME_WE)
-    set(_byproducts "${output_directory}/${_generated_we}.html")
+    # Cython strips only the final extension when naming the HTML file.
+    get_filename_component(_generated_name "${generated_file}" NAME)
+    string(REGEX REPLACE "\\.[^.]*$" "" _generated_stem "${_generated_name}")
+    set(_byproducts "${output_directory}/${_generated_stem}.html")
   endif()
 
   # Add the command to run the compiler.
@@ -319,7 +321,10 @@ function(Cython_transpile)
   set(_header_outputs)
   if(_args_PUBLIC_HEADER_VARIABLE OR _args_API_HEADER_VARIABLE)
     get_filename_component(_header_dir "${generated_file}" DIRECTORY)
-    get_filename_component(_header_stem "${generated_file}" NAME_WE)
+    get_filename_component(_header_stem "${generated_file}" NAME)
+    # Cython strips only the final extension (os.path.splitext), so
+    # "mod.generated.c" yields "mod.generated.h"; NAME_WE would strip both.
+    string(REGEX REPLACE "\\.[^.]*$" "" _header_stem "${_header_stem}")
   endif()
   if(_args_PUBLIC_HEADER_VARIABLE)
     set(_public_header "${_header_dir}/${_header_stem}.h")

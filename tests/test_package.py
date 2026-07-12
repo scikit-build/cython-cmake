@@ -279,6 +279,55 @@ def test_public_headers(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert "mymath_api.h" in build_files
 
 
+def test_public_headers_multisuffix_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    package_dir = tmp_path / "pkg_headers"
+    shutil.copytree(DIR / "packages/public_headers", package_dir)
+    monkeypatch.chdir(package_dir)
+
+    build_dir = tmp_path / "build"
+
+    # Cython names the headers by stripping only the final extension of the
+    # output file (os.path.splitext), so OUTPUT mymath.generated.c yields
+    # mymath.generated.h / mymath.generated_api.h. Assert the returned
+    # variables point at those, not at mymath.h (NAME_WE would strip both).
+    cmakelists = Path("CMakeLists.txt")
+    txt = cmakelists.read_text().replace(
+        "OUTPUT_VARIABLE mymath_c",
+        'OUTPUT "mymath.generated.c"\n  OUTPUT_VARIABLE mymath_c',
+    )
+    txt += (
+        '\nset(_expected "${CMAKE_CURRENT_BINARY_DIR}/mymath.generated.h")\n'
+        "if(NOT mymath_h STREQUAL _expected)\n"
+        '  message(FATAL_ERROR "wrong public header path: ${mymath_h}")\n'
+        "endif()\n"
+        'set(_expected "${CMAKE_CURRENT_BINARY_DIR}/mymath.generated_api.h")\n'
+        "if(NOT mymath_api_h STREQUAL _expected)\n"
+        '  message(FATAL_ERROR "wrong api header path: ${mymath_api_h}")\n'
+        "endif()\n"
+    )
+    cmakelists.write_text(txt)
+
+    consumer = Path("consumer.c")
+    consumer.write_text(
+        consumer.read_text().replace('"mymath.h"', '"mymath.generated.h"')
+    )
+
+    wheel = build_wheel(
+        str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []}
+    )
+
+    with zipfile.ZipFile(tmp_path / wheel) as f:
+        file_names = set(f.namelist())
+    assert len(file_names) == 4
+
+    build_files = {x.name for x in build_dir.iterdir()}
+    assert "mymath.generated.c" in build_files
+    assert "mymath.generated.h" in build_files
+    assert "mymath.generated_api.h" in build_files
+
+
 def test_genex_cython_args(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capfd: pytest.CaptureFixture[str]
 ) -> None:
