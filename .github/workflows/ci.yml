@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.x"
       - uses: pre-commit/action@v3.0.1
@@ -61,7 +61,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
@@ -74,7 +74,7 @@ jobs:
       - run: pipx install ninja
         if: matrix.cmake == '3.15.x'
 
-      - uses: astral-sh/setup-uv@v8.3.0
+      - uses: astral-sh/setup-uv@v8.3.2
 
       - name: Test package
         run: uv run pytest --durations=20
