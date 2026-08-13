@@ -68,6 +68,10 @@ installer = "uv"
 dependency-groups = ["test"]
 extra-dependencies = ["cmake", "ninja"]
 
+[tool.uv]
+exclude-newer = "7 days"
+
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
@@ -115,6 +119,7 @@ ignore = [
   "S101",    # Assert is used by mypy and pytest
   "D",       # Too many doc requests
   "COM812",  # Trailing commas teach the formatter
+  "CPY001",  # Copyright notice not required
 ]
 flake8-annotations.allow-star-arg-any = true
 
