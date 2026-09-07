@@ -5,7 +5,7 @@ ci:
 
 repos:
   - repo: https://github.com/adamchainz/blacken-docs
-    rev: "fda77690955e9b63c6687d8806bafd56a526e45f" # frozen: 1.20.0
+    rev: "dda8db18cfc68df532abf33b185ecd12d5b7b326"  # frozen: 1.20.0
     hooks:
       - id: blacken-docs
         additional_dependencies: [black==23.*]
@@ -42,14 +42,14 @@ repos:
         args: [--prose-wrap=always]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "39d9ac5938dadb73df0564a45f163e25ff9fa6e2" # frozen: v0.16.1
+    rev: "321478e58f4938179c6b86e4ddfa923d1547a49b"  # frozen: v0.16.6
     hooks:
       - id: ruff-check
         args: ["--fix"]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "41e691678310dfd3833f7ab4e180ddb014310356" # frozen: v2.3.0
+    rev: "7ff8d35ae36a7d2b968f2f90b4c723e292e594ee"  # frozen: v2.3.1
     hooks:
       - id: mypy
         files: src|tests
@@ -66,7 +66,7 @@ repos:
       - id: codespell
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: "745eface02aef23e168a8afb6b5737818efbea95" # frozen: v0.11.0.1
+    rev: "a6564f5d57444e123433a5c9af733e3975c77229"  # frozen: v0.11.0.1-1
     hooks:
       - id: shellcheck
 
@@ -84,25 +84,25 @@ repos:
         exclude: .pre-commit-config.yaml
 
   - repo: https://github.com/henryiii/validate-pyproject-schema-store
-    rev: "a12c4f2e45f39cfb516be7842efbe98633eb3789" # frozen: 2026.08.05
+    rev: "0cee1769d7b9f642b7545be04c079f94277d6833"  # frozen: 2026.09.04
     hooks:
       - id: validate-pyproject
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "6b63472e72e1a91ed8a2f6d483790dfb644fa1d3" # frozen: 0.37.4
+    rev: "c4654a7e007c9619a5eb63c39a456572a0fa1851"  # frozen: 0.38.0
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
       - id: check-readthedocs
 
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: "451b56af716f9f0d0c2b816503a3fd0cf8b036fa" # frozen: v1.29.0
+    rev: "cef8b8350da46d8114c7e6b7272aebdccdf193ce"  # frozen: v1.30.0
     hooks:
       - id: zizmor
         files: "^\\.github"
         args: [--persona=pedantic]
 
   - repo: https://github.com/scientific-python/cookie
-    rev: "8f0581cc50b14023b14a9c77e9b358738ba637e7" # frozen: 2026.06.18
+    rev: "1589a99867d6cac494ac7545fe6a83108580a3ee"  # frozen: 2026.08.14
     hooks:
       - id: sp-repo-review
