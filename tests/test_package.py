@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.metadata
+import re
 import shutil
 import subprocess
 import zipfile
@@ -400,5 +401,10 @@ def test_freethreading_compatible(
     build_wheel(str(tmp_path), {"build-dir": str(build_dir), "wheel.license-files": []})
 
     # The module declares it runs without the GIL only when the directive is set.
+    # Cython 3.3+ passes a macro; its last (default) definition is the directive.
     generated_c = (build_dir / "simple.c").read_text()
-    assert "PyUnstable_Module_SetGIL(__pyx_m, Py_MOD_GIL_NOT_USED)" in generated_c
+    defines = re.findall(r"#define __Pyx_FREETHREADING_COMPATIBLE (\w+)", generated_c)
+    if defines:
+        assert defines[-1] == "Py_MOD_GIL_NOT_USED"
+    else:
+        assert "PyUnstable_Module_SetGIL(__pyx_m, Py_MOD_GIL_NOT_USED)" in generated_c
