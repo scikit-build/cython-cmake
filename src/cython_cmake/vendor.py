@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 import enum
-import sys
+from importlib.resources import files
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-if sys.version_info < (3, 9):
-    from importlib_resources import files
-else:
-    from importlib.resources import files
 
 __all__ = ["Members", "vendorize"]
 
